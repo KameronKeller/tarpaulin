@@ -1,0 +1,23 @@
+{
+    "name": "tarpaulin",
+    "version": "1.0.0",
+    "description": "Final Project For CS 493",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/KameronKeller/tarpaulin.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/KameronKeller/tarpaulin/issues"
+    },
+    "homepage": "https://github.com/KameronKeller/tarpaulin#readme",
+    "dependencies": {
+        "express": "^4.19.2",
+        "morgan": "^1.10.0"
+    }
+}
