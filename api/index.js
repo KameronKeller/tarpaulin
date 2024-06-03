@@ -1,10 +1,10 @@
 const { Router } = require('express')
+
 const router = Router()
 
-router.get('/', (req, res) => {
-    res.status(200).send(
-        "Hello World!"
-    )
-})
+router.use('/assignments', require('./assignments'))
+router.use('/courses', require('./courses'))
+router.use('/submissions', require('./submissions'))
+router.use('/users', require('./users'))
 
 module.exports = router
