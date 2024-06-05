@@ -19,10 +19,10 @@ const CoursesSchema = {
 async function delete_course(courseId) {
 
     const db = getDbReference();
-    const courseCollection = db.collection("Course");
+    const courseCollection = db.collection("Courses");
     const courseResult = await courseCollection.deleteOne({ id: courseId });
     if(courseResult.acknowledged && courseResult.deletedCount === 1){
-        const assignmentCollection = db.collection("Assignment");
+        const assignmentCollection = db.collection("Assignments");
         const assignmentResult= await assignmentCollection.deleteMany({ courseId: courseId });
         if(assignmentResult.acknowledged && assignmentResult.deletedCount === 1){
             return 0;
