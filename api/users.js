@@ -2,10 +2,10 @@ const { Router } = require('express')
 const router = Router()
 
 const auth = require('../lib/auth');
-const user = require('../model/user');
 const e = require('express');
 
 const { validateAgainstSchema } = require('../lib/validation');
+const { get_user, authorizeInsertUser, insert_user } = require('../model/user');
 
 router.get('/', (req, res) => {
     res.status(200).send("Hello Users")
@@ -30,7 +30,7 @@ router.get('/', (req, res) => {
  *      "id": 123
  *  }
 */
-router.post('/', user.authorizeInsertUser, async (req, res) => {
+router.post('/', authorizeInsertUser, async (req, res) => {
     if(validateAgainstSchema(req.body), Userschema){
         try {
             const result = await insert_user(req.body);
@@ -73,8 +73,8 @@ router.post('/login', async (req, res) => {
             // Get user by email.
             const user = get_user_by_email(req.email);
             // Validate user.
-            const validate = validateUser(user, req.password);
-            //const results = await login_user(req.body);
+            const validate = auth.validateUser(user, req.password);
+
             auth.validateUser(user, req.password).then(authenticated => {
                 if(authenticated){
                     const token = auth.generateAuthToken(user._id, user.role);
@@ -117,7 +117,7 @@ router.get('/:userid', auth.authenticate, async (req, res) => {
             error: "Unauthorized"
         });
     } else {
-        const result = user.get_user(userId);
+        const result = get_user(userId);
         if(result){
             res.status(200).send(result);
         } else {
