@@ -2,7 +2,33 @@ const { Router } = require('express')
 const router = Router()
 
 const auth = require('../lib/auth')
-const { delete_course } = require('../model/courses')
+const { delete_course, get_courses_by_id } = require('../model/courses')
+
+/* GET /courses/{id}/students
+*   Returns a list containing the User IDs of all students currently enrolled in the Course. 
+*   Only an authenticated User with 'admin' role or an authenticated 'instructor' User 
+*   whose ID matches the instructorId of the Course can fetch the list of enrolled students.
+*/
+router.get('/:courseId', auth.authenticate, auth.authorize(["admin", "instructor"]), async (req, res, next) => {
+    try {
+        const course = get_courses_by_id(req.params.courseId);
+        if((req.role == "instructor" && course.instructorId == req.userId) || req.role == "admin"){
+            // An admin and an instructor with the same id as in the course can view the students
+            const students = course.students;
+            res.send(200).json({students})
+        } else {
+            // Unauthorized
+            res.send(404).json({
+                error: "Unauthorized"
+            })
+        }
+
+    } catch (error) {
+        res.status(500).json({
+            error: error
+        })
+    }
+})
 
 
 /*

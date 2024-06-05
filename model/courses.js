@@ -31,3 +31,15 @@ async function delete_course(courseId) {
     return -1;
 }
 exports.delete_course = delete_course
+
+
+/*
+*   Return a Course from the database based off of it's id
+*/
+async function get_courses_by_id(courseId){
+    const db = getDbReference();
+    const collection = db.collection("Courses");
+    const result = await collection.findOne({ id: courseId });
+    return result;
+}
+exports.get_courses_by_id = get_courses_by_id
