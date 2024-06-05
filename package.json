@@ -4,7 +4,8 @@
     "description": "Final Project For CS 493",
     "main": "server.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "node server.js",
+        "initdb": "node initDb.js"
     },
     "repository": {
         "type": "git",
@@ -17,7 +18,10 @@
     },
     "homepage": "https://github.com/KameronKeller/tarpaulin#readme",
     "dependencies": {
+        "bcryptjs": "^2.4.3",
         "express": "^4.19.2",
+        "jsonwebtoken": "^9.0.2",
+        "mongodb": "^6.7.0",
         "morgan": "^1.10.0"
     }
 }

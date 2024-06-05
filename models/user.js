@@ -14,7 +14,7 @@ async function get_user(userId){
     const db = getDbReference();
 
     // Query for a user
-    const user = await db.collection('Users').findOne({_id: new ObjectId(userId)});
+    const user = await db.collection('Users').findOne({_id: new ObjectId.createFromHexString(userId)});
     if(!user){
         return null;
     }
@@ -73,3 +73,16 @@ async function insert_user(userInfo){
     return { "id": result.insertedId}
 }
 exports.insert_user = insert_user
+
+
+async function bulkInsertNewUsers(users) {
+    const usersToInsert = users.map( function (user) {
+        return extractValidFields(user, UserSchema)
+    });
+    const db = getDbreference();
+    const collection = db.collection('users');
+    const results = await collection.insertMany(usersToInsert);
+    return results.insertedIds;
+}
+
+exports.bulkInsertNewUsers = bulkInsertNewUsers

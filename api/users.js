@@ -2,7 +2,7 @@ const { Router } = require('express')
 const router = Router()
 
 const auth = require('../lib/auth');
-const user = require('../model/user');
+const user = require('../models/user');
 const e = require('express');
 
 const { validateAgainstSchema } = require('../lib/validation');
