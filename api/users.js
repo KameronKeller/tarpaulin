@@ -7,10 +7,6 @@ const e = require('express');
 const { validateAgainstSchema } = require('../lib/validation');
 const { get_user, authorizeInsertUser, insert_user } = require('../model/user');
 
-router.get('/', (req, res) => {
-    res.status(200).send("Hello Users")
-})
-
 
 /*  POST /users
  *  Create and store a new application User with specified data and adds 
@@ -93,6 +89,7 @@ router.post('/login', async (req, res) => {
       });
     }
 });
+
 
 /*
 * -- GET /users/{id} --
