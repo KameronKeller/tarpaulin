@@ -10,7 +10,44 @@ router.get('/', (req, res) => {
 })
 
 
-// POST /users
+/*  POST /users
+ *  Create and store a new application User with specified data and adds 
+ *  it to the application's database. Only an authenticated User with 
+ *  'admin' role can create users with the 'admin' or 'instructor' roles.
+ *  
+ *  Request Example:
+ *  {
+ *     "name": "Jane Doe",
+ *      "email": "doej@oregonstate.edu",
+ *      "password": "hunter2",
+ *      "role": "student"
+ *  }
+ * 
+ *  Response Example:
+ *  {
+ *      "id": 123
+ *  }
+*/
+router.post('/', user.authorizeInsertUser, async (req, res) => {
+    //if(validateAgaisntSchema(req.body), Userschema){ // Add when validateAgaisntSchema function is made.
+        try {
+            const result = await insert_user(req.body);
+            if(result){
+                res.status(201).send(result);
+            } else {
+                res.status(409).json({
+                    error: "Unable to create user"
+                });
+            }
+        } catch (error) {
+            res.status(500).json({
+                error: "System unable to handle request"
+            });
+        }
+    //} else { res.status(400).json({error: Request body field(s) missing.}); }
+})
+
+
 
 /*  -- POST /users/login --
  *  Authenticates a specific User with their email address and password.

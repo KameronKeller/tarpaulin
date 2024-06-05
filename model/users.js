@@ -1,6 +1,6 @@
 const { ObjectId, GridFSBucket } = require('mongodb')
 const { getDbReference } = require('../lib/mongo')
-
+const auth = require('../lib/auth');
 
 const UserSchema = {
     name: { required: true},
@@ -49,13 +49,26 @@ async function get_user(userId){
 
 exports.get_user = get_user
 
-
-/*  INSERT
-async function insertNewBusiness(business) {
-  business = extractValidFields(business, BusinessSchema)
-  const db = getDbReference()
-  const collection = db.collection('businesses')
-  const result = await collection.insertOne(business)
-  return result.insertedId
+// Only an admin is authorized to create an instructor or admin User.
+function authorizeInsertUser(req, res, next) {
+    let allowedRoles = [];
+  
+    if (req.body.role === 'instructor' || req.body.role === 'admin') {
+        allowedRoles = ['admin'];
+    } else {
+        allowedRoles = ['instructor', 'student'];
+    }
+  
+    // Call the authorize middleware with the determined roles
+    auth.authorize(allowedRoles)(req, res, next);
 }
-*/
+exports.authorizeInsertUser = authorizeInsertUser
+
+
+async function insert_user(userInfo){
+    user = extractValidFields(userInfo, BusinessSchema);
+    const db = getDbReference();
+    const collection = db.collection("Users");
+    const result = await collection.insertOne(business);
+    return { "id": result.insertedId}
+}
