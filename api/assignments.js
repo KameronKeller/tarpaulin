@@ -6,6 +6,7 @@ const {
   updateAssignment,
 } = require("../model/assignment");
 
+const { authorize, authenticate, ROLES } = require("../lib/auth");
 const { ObjectId } = require("mongodb");
 const router = Router();
 
@@ -21,18 +22,23 @@ router.get("/:assignmentId", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
-  try {
-    const id = await insertAssignment(req.body);
-    res.status(201).send({
-      id: id,
-    });
-  } catch (err) {
-    res.status(400).send({
-      error: "Request body is not a valid assignment object",
-    });
+router.post(
+  "/",
+  authenticate,
+  authorize([ROLES.admin, ROLES.instructor]),
+  async (req, res, next) => {
+    try {
+      const id = await insertAssignment(req.body);
+      res.status(201).send({
+        id: id,
+      });
+    } catch (err) {
+      res.status(400).send({
+        error: "Request body is not a valid assignment object",
+      });
+    }
   }
-});
+);
 
 router.delete("/:assignmentId", async (req, res, next) => {
   try {
