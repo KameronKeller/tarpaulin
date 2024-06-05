@@ -20,7 +20,7 @@ async function delete_course(courseId) {
 
     const db = getDbReference();
     const courseCollection = db.collection("Courses");
-    const courseResult = await courseCollection.deleteOne({ id: courseId });
+    const courseResult = await courseCollection.deleteOne({ _id: courseId });
     if(courseResult.acknowledged && courseResult.deletedCount === 1){
         const assignmentCollection = db.collection("Assignments");
         const assignmentResult= await assignmentCollection.deleteMany({ courseId: courseId });
@@ -39,7 +39,33 @@ exports.delete_course = delete_course
 async function get_courses_by_id(courseId){
     const db = getDbReference();
     const collection = db.collection("Courses");
-    const result = await collection.findOne({ id: courseId });
+    const result = await collection.findOne({ _id: courseId });
     return result;
 }
 exports.get_courses_by_id = get_courses_by_id
+
+/*
+*   Adds and removes students from a course
+*/
+async function update_students(req, courseId){
+    const db = getDbReference();
+    const collection = db.collection("Courses");
+
+    const toAdd = req.body.add;
+    if(toAdd.length > 0){
+        db.collection.updateOne(
+            { _id: courseId },
+            { $addToSet: { students: { $each: toAdd } } }
+        );
+    }
+    const toRemove = req.body.remove;
+    if(toRemove.length > 0){
+        db.collection.updateOne(
+            { _id: courseId },
+            { $pullAll: { students: { $each: toRemove } } }
+        );
+    }
+
+}
+
+exports.update_students = update_students
