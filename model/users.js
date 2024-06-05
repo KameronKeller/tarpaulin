@@ -66,9 +66,10 @@ exports.authorizeInsertUser = authorizeInsertUser
 
 
 async function insert_user(userInfo){
-    user = extractValidFields(userInfo, BusinessSchema);
+    user = extractValidFields(userInfo, UserSchema);
     const db = getDbReference();
     const collection = db.collection("Users");
     const result = await collection.insertOne(business);
     return { "id": result.insertedId}
 }
+exports.insert_user = insert_user

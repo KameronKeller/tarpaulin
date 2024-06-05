@@ -5,6 +5,8 @@ const auth = require('../lib/auth');
 const user = require('../model/user');
 const e = require('express');
 
+const { validateAgainstSchema } = require('../lib/validation');
+
 router.get('/', (req, res) => {
     res.status(200).send("Hello Users")
 })
@@ -29,7 +31,7 @@ router.get('/', (req, res) => {
  *  }
 */
 router.post('/', user.authorizeInsertUser, async (req, res) => {
-    //if(validateAgaisntSchema(req.body), Userschema){ // Add when validateAgaisntSchema function is made.
+    if(validateAgainstSchema(req.body), Userschema){
         try {
             const result = await insert_user(req.body);
             if(result){
@@ -44,7 +46,7 @@ router.post('/', user.authorizeInsertUser, async (req, res) => {
                 error: "System unable to handle request"
             });
         }
-    //} else { res.status(400).json({error: Request body field(s) missing.}); }
+    } else { res.status(400).json({error: "Request body field(s) missing"}); }
 })
 
 
