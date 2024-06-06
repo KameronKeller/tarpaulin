@@ -12,8 +12,9 @@ const SubmissionSchema = {
     file: {required: true}
 }
 
+exports.SubmissionSchema = SubmissionSchema;
 async function getSubmission(submissionId) {
-    const submission = await Db.collection('Submissions').findOne({_id: new ObjectId.createFromHexString(submissionId)})
+    const submission = await Db.collection('Submissions').findOne({_id: ObjectId.createFromHexString(submissionId)})
 
     if (!submission) {
         return null;
@@ -29,7 +30,7 @@ exports.getSubmission = getSubmission;
 async function insertSubmission(submissionInfo) {
     const submission = extractValidFields(submissionInfo, SubmissionSchema);
     const db = getDbReference();
-    const collection = db.collection('Submissions');
+    const collection = await db.collection('Submissions');
     const result = await collection.insertOne(submission);
     return {'id': result.insertedId};
 }
@@ -48,3 +49,11 @@ async function bulkInsertNewSubmissions(submissions) {
 }
 
 exports.bulkInsertNewSubmissions = bulkInsertNewSubmissions;
+
+async function getSubmissions() {
+    const db = getDbReference();
+    const collection = db.collection('Submissions');
+    return collection
+}
+
+exports.getSubmissions = getSubmissions;
