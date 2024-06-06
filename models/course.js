@@ -1,5 +1,6 @@
 const {ObjectId, GridFSBucket} = require('mongodb');
 const {getDbReference} = require('../lib/mongo');
+const { extractValidFields } = require('../lib/validation'); 
 const auth = require('../lib/auth');
 
 // subject, number, title, term, instructorId
@@ -38,7 +39,7 @@ async function insertCourse(courseInfo) {
 exports.insertCourse = insertCourse;
 
 async function bulkInsertNewCourses(courses) {
-    const coursesToInsert = users.map( function (course) {
+    const coursesToInsert = courses.map( function (course) {
         return extractValidFields(course, CourseSchema);
     });
     const db = getDbReference();
@@ -46,3 +47,5 @@ async function bulkInsertNewCourses(courses) {
     const result = await collection.insertMany(coursesToInsert);
     return result.insertedIds;
 }
+
+exports.bulkInsertNewCourses = bulkInsertNewCourses;
