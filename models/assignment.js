@@ -61,3 +61,11 @@ async function getAssignmentsForClass(courseId) {
 }
 
 exports.getAssignmentsForClass = getAssignmentsForClass;
+
+async function getAssignments() {
+    const db = getDbReference();
+    const collection = db.collection('Assignments');
+    return collection;
+}
+
+exports.getAssignments = getAssignments;
