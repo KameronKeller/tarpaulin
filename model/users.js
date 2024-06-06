@@ -1,24 +1,17 @@
-const { ObjectId, GridFSBucket } = require('mongodb')
+const { ObjectId } = require('mongodb')
 const { getDbReference } = require('../lib/mongo')
 const auth = require('../lib/auth');
-
-const UserSchema = {
-    name: { required: true},
-    email: {required: true},
-    password: {required: true},
-    role: {required: true}
-}
 
 
 async function get_user(userId){
     const db = getDbReference();
-
     // Query for a user
-    const user = await db.collection('Users').findOne({_id: new ObjectId(userId)});
+    const user = await db.collection('Users').findOne({_id: new ObjectId(String(userId))});
     if(!user){
         return null;
     }
     const role = user.role;
+
     if (role === "instructor"){
 
         coursesTeached = [];
@@ -52,24 +45,29 @@ exports.get_user = get_user
 // Only an admin is authorized to create an instructor or admin User.
 function authorizeInsertUser(req, res, next) {
     let allowedRoles = [];
-  
     if (req.body.role === 'instructor' || req.body.role === 'admin') {
         allowedRoles = ['admin'];
     } else {
-        allowedRoles = ['instructor', 'student'];
+        allowedRoles = ['admin', 'instructor', 'student'];
     }
-  
     // Call the authorize middleware with the determined roles
-    auth.authorize(allowedRoles)(req, res, next);
+    return auth.authorize(allowedRoles)(req, res, next);
 }
 exports.authorizeInsertUser = authorizeInsertUser
 
 
 async function insert_user(userInfo){
-    user = extractValidFields(userInfo, UserSchema);
     const db = getDbReference();
     const collection = db.collection("Users");
-    const result = await collection.insertOne(business);
+    const result = await collection.insertOne(userInfo);
     return { "id": result.insertedId}
 }
 exports.insert_user = insert_user
+
+async function get_user_by_email(userEmail){
+    const db = getDbReference();
+    const collection = db.collection("Users");
+    const result = await collection.findOne({email: userEmail})
+    return result;
+}
+exports.get_user_by_email = get_user_by_email
