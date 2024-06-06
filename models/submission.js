@@ -1,6 +1,7 @@
 const {ObjectId, GridFSBucket} = require('mongodb');
 const {getDbReference} = require('../lib/mongo');
 const auth = require('../lib/auth');
+const { extractValidFields } = require('../lib/validation');
 
 // assignmentId, studentId, timestamp, grade, file
 const SubmissionSchema = {
