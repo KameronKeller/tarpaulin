@@ -1,6 +1,7 @@
 const {ObjectId, GridFSBucket} = require('mongodb');
 const {getDbReference} = require('../lib/mongo');
 const auth = require('../lib/auth');
+const { extractValidFields } = require('../lib/validation');
 
 // courseId, title, points, due
 const AssignmnetSchema = {
@@ -39,7 +40,7 @@ async function bulkInsertNewAssignments(assignments) {
     });
 
     const db = getDbReference();
-    const colleciton = db.collection('Assignments');
+    const collection = db.collection('Assignments');
     const results = await collection.insertMany(assignmentsToInsert);
     return results.insertedIds;
 }
