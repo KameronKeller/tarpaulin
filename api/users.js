@@ -5,7 +5,6 @@ const auth = require('../lib/auth');
 const e = require('express');
 
 const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
-// const { get_user, authorizeInsertUser, insert_user, get_user_by_email } = require('../model/users');
 const userModel = require('../model/users');
 
 const UserSchema = {
@@ -123,7 +122,6 @@ router.get('/:userid', auth.authenticate, async (req, res) => {
             });
         } else {
             const result = await userModel.get_user(req.params.userid);
-            console.log(result); //<---------------------------------------
             if(result){
                 res.status(200).send(result);
             } else {
@@ -133,7 +131,6 @@ router.get('/:userid', auth.authenticate, async (req, res) => {
             }
         }
     } catch (error) {
-        console.log(error); // <---------------------------------------------
         res.status(500).json({error: "System unable to handle request"})
     }
     
