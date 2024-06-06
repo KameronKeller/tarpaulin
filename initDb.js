@@ -22,7 +22,6 @@ const { bulkInsertNewCourses } = require('./models/course')
 const { bulkInsertNewAssignments } = require('./models/assignment')
 const { bulkInsertNewSubmissions } = require('./models/submission')
 
-console.log("== Running initDB Before JSON")
 const assignmnetData = require('./data/assignments.json')
 const coursesData = require('./data/courses.json')
 const submissionsData = require('./data/submissions.json')
@@ -31,7 +30,8 @@ const userData = require('./data/users.json')
 
 const mongoCreateUser = process.env.MONGO_CREATE_USER
 const mongoCreatePassword = process.env.MONGO_CREATE_PASSWORD
-console.log('=== before connectToDb');
+const mongoDbName = process.env.MONGO_DB_NAME
+
 connectToDb(async function () {
   /*
    * Insert initial business data into the database
@@ -56,8 +56,11 @@ connectToDb(async function () {
    */
   if (mongoCreateUser && mongoCreatePassword) {
     const db = getDbReference()
-    const result = await db.addUser(mongoCreateUser, mongoCreatePassword, {
-      roles: "readWrite"
+    const result = await db.command({
+      createUser: mongoCreateUser,
+      pwd: mongoCreatePassword, 
+      roles: [{role: "readWrite", db: mongoDbName}],
+
     })
     console.log("== New user created:", result)
   }
