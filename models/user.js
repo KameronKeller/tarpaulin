@@ -1,6 +1,7 @@
 const { ObjectId, GridFSBucket } = require('mongodb')
-const { getDbReference } = require('../lib/mongo')
+const  {getDbReference}  = require('../lib/mongo')
 const auth = require('../lib/auth');
+const { extractValidFields } = require('../lib/validation');
 
 const UserSchema = {
     name: { required: true},
@@ -79,7 +80,7 @@ async function bulkInsertNewUsers(users) {
     const usersToInsert = users.map( function (user) {
         return extractValidFields(user, UserSchema)
     });
-    const db = getDbreference();
+    const db = getDbReference();
     const collection = db.collection('users');
     const results = await collection.insertMany(usersToInsert);
     return results.insertedIds;
