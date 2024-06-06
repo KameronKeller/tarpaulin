@@ -14,7 +14,7 @@ const AssignmnetSchema = {
 async function getAssignment(assignmentId) {
     const db = getDbReference();
 
-    const assignment = await db.collection('Assignments').findOne({ _id: new ObjectId.createFromHexString(assignmentId) });
+    const assignment = await db.collection('Assignments').findOne({ _id: ObjectId.createFromHexString(assignmentId) });
     if (!assignment) {
         return null;
     };
@@ -33,6 +33,7 @@ async function insertAssignment(assignmentInfo) {
     const result = await collection.insertOne(assignment);
     return {'id': result.insertedIds};
 }
+exports.insertAssignment = insertAssignment;
 
 async function bulkInsertNewAssignments(assignments) {
     const assignmentsToInsert = assignments.map(function (assignment) {
@@ -46,3 +47,17 @@ async function bulkInsertNewAssignments(assignments) {
 }
 
 exports.bulkInsertNewAssignments = bulkInsertNewAssignments;
+
+async function getAssignmentsForClass(courseId) {
+    const db = getDbReference();
+
+    const assignments = await db.collection('Assignments').find({ courseId: courseId }, {projection: {courseId: 1, title: 1, points: 1, due: 1, _id: 0}}).toArray();
+    if (!assignments) {
+        console.log("NULL");
+        return null;
+    };
+    console.log("NOT NULL");
+    return assignments
+}
+
+exports.getAssignmentsForClass = getAssignmentsForClass;
