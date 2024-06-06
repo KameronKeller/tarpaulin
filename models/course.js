@@ -49,3 +49,11 @@ async function bulkInsertNewCourses(courses) {
 }
 
 exports.bulkInsertNewCourses = bulkInsertNewCourses;
+
+async function getCourses() {
+    const db = getDbReference();
+    const collection = db.collection('Courses');
+    return collection;
+}
+
+exports.getCoursews = getCourses;
