@@ -7,7 +7,8 @@ const UserSchema = {
     name: { required: true},
     email: {required: true},
     password: {required: true},
-    role: {required: true}
+    role: {required: true},
+    courseIds: {required: false}
 }
 
 
@@ -15,7 +16,7 @@ async function get_user(userId){
     const db = getDbReference();
 
     // Query for a user
-    const user = await db.collection('Users').findOne({_id: new ObjectId.createFromHexString(userId)});
+    const user = await db.collection('Users').findOne({_id: ObjectId.createFromHexString(userId)});
     if(!user){
         return null;
     }
