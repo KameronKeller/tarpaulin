@@ -131,4 +131,7 @@ dist
 
 remove_dockers.sh
 .gitignore
+curl_commands.sh
+curls.txt
+
 
