@@ -28,7 +28,7 @@ async function getAssignment(id) {
 exports.getAssignment = getAssignment;
 
 async function insertAssignment(assignmentInfo) {
-  const assignment = extractValidFields(assignmentInfo, assignmentSchema);
+  const assignment = extractValidFields(assignmentInfo, AssignmentSchema);
   const collection = getAssignments();
   const result = await collection.insertOne(assignment);
   return result.insertedId;
