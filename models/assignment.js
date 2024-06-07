@@ -1,79 +1,70 @@
-const { ObjectId, GridFSBucket } = require("mongodb");
 const { getDbReference } = require("../lib/mongo");
-const auth = require("../lib/auth");
+const { ObjectId } = require("mongodb");
 const { extractValidFields } = require("../lib/validation");
 
-// courseId, title, points, due
-const assignmentSchema = {
+const AssignmentSchema = {
   courseId: { required: true },
   title: { required: true },
   points: { required: true },
   due: { required: true },
 };
 
-async function getAssignment(assignmentId) {
-  const db = getDbReference();
-
-  const assignment = await db
-    .collection("Assignments")
-    .findOne({ _id: ObjectId.createFromHexString(assignmentId) });
-  if (!assignment) {
-    return null;
-  }
-
-  return {
-    ...assignment,
-  };
-}
-
-exports.getAssignment = getAssignment;
-
-async function insertAssignment(assignmentInfo) {
-  const assignment = extractValidFields(assignmentInfo, assignmentSchema);
-  const db = getDbReference();
-  const collection = db.collection("Assignments");
-  const result = await collection.insertOne(assignment);
-  return { id: result.insertedIds };
-}
-exports.insertAssignment = insertAssignment;
-
-async function bulkInsertNewAssignments(assignments) {
-  const assignmentsToInsert = assignments.map(function (assignment) {
-    return extractValidFields(assignment, assignmentSchema);
-  });
-
-  const db = getDbReference();
-  const collection = db.collection("Assignments");
-  const results = await collection.insertMany(assignmentsToInsert);
-  return results.insertedIds;
-}
-
-exports.bulkInsertNewAssignments = bulkInsertNewAssignments;
-
-async function getAssignmentsForClass(courseId) {
-  const db = getDbReference();
-
-  const assignments = await db
-    .collection("Assignments")
-    .find(
-      { courseId: courseId },
-      { projection: { courseId: 1, title: 1, points: 1, due: 1, _id: 0 } }
-    )
-    .toArray();
-  if (!assignments) {
-    console.log("NULL");
-    return null;
-  }
-  console.log("NOT NULL");
-  return assignments;
-}
-
-exports.getAssignmentsForClass = getAssignmentsForClass;
-
-async function getAssignments() {
+function getAssignments() {
   const db = getDbReference();
   const collection = db.collection("Assignments");
   return collection;
 }
 
 exports.getAssignments = getAssignments;
+
+async function getAssignment(id) {
+  const assignments = getAssignments();
+  const assignment = await assignments.findOne({
+    _id: id,
+  });
+  return assignment;
+}
+
+exports.getAssignment = getAssignment;
+
+async function insertAssignment(assignmentInfo) {
+  const assignment = extractValidFields(assignmentInfo, assignmentSchema);
+  const collection = getAssignments();
+  const result = await collection.insertOne(assignment);
+  return result.insertedId;
+}
+
+exports.insertAssignment = insertAssignment;
+
+async function deleteAssignment(id) {
+  const collection = getAssignments();
+  const result = await collection.deleteOne({ _id: id });
+
+  return result.deletedCount;
+}
+
+exports.deleteAssignment = deleteAssignment;
+
+async function updateAssignment(id, contents) {
+  const collection = getAssignments();
+  const result = await collection.updateOne(
+    { _id: id },
+    {
+      $set: contents,
+    }
+  );
+  return result;
+}
+
+exports.updateAssignment = updateAssignment;
+
+async function bulkInsertNewAssignments(assignments) {
+  const assignmentsToInsert = assignments.map(function (assignment) {
+    return extractValidFields(assignment, AssignmentSchema);
+  });
+  const collection = getAssignments();
+  const result = await collection.insertMany(assignmentsToInsert);
+  return result.insertedIds;
+}
+
+exports.bulkInsertNewAssignments = bulkInsertNewAssignments;
