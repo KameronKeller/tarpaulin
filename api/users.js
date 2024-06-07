@@ -5,11 +5,15 @@ const auth = require('../lib/auth');
 const user = require('../models/user');
 const e = require('express');
 
-const { validateAgainstSchema } = require('../lib/validation');
+const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
+const userModel = require('../model/users');
 
-router.get('/', (req, res) => {
-    res.status(200).send("Hello Users")
-})
+const UserSchema = {
+    name: { required: true},
+    email: {required: true},
+    password: {required: true},
+    role: {required: true}
+}
 
 
 /*  POST /users
@@ -30,10 +34,11 @@ router.get('/', (req, res) => {
  *      "id": 123
  *  }
 */
-router.post('/', user.authorizeInsertUser, async (req, res) => {
+router.post('/', auth.authenticate, userModel.authorizeInsertUser, async (req, res) => {
     if(validateAgainstSchema(req.body, UserSchema)){
         try {
-            const result = await insert_user(req.body);
+            const newUserInfo = extractValidFields(req.body, UserSchema);
+            const result = await userModel.insert_user(newUserInfo);
             if(result){
                 res.status(201).send(result);
             } else {
@@ -71,20 +76,18 @@ router.post('/login', async (req, res) => {
     if (req.body && req.body.email && req.body.password) {
         try {
             // Get user by email.
-            const user = get_user_by_email(req.email);
+            const user = await userModel.get_user_by_email(req.body.email);
             // Validate user.
-            const validate = validateUser(user, req.password);
-            //const results = await login_user(req.body);
-            auth.validateUser(user, req.password).then(authenticated => {
+            auth.validateUser(user, req.body.password).then(authenticated => {
                 if(authenticated){
                     const token = auth.generateAuthToken(user._id, user.role);
                     res.status(200).send({ token: token});
                 } else {
-                    res.status(401).json({error: "Invalid Login"});
+                    res.status(401).json({error: "Unauthorized"});
                 }
             })
         } catch (error) {
-            res.status(500).send({error: error});
+            res.status(500).json({error: "System unable to handle request"});
         }
   
     } else {
@@ -93,6 +96,7 @@ router.post('/login', async (req, res) => {
       });
     }
 });
+
 
 /*
 * -- GET /users/{id} --
@@ -111,20 +115,24 @@ router.post('/login', async (req, res) => {
 *   }
 */
 router.get('/:userid', auth.authenticate, async (req, res) => {
-    if (parseInt(req.userId) !== parseInt(req.params.userid) && req.role !== 'admin') {
-        // User is not an admin, or does not have same ID as the one requested.
-        res.status(403).json({
-            error: "Unauthorized"
-        });
-    } else {
-        const result = user.get_user(userId);
-        if(result){
-            res.status(200).send(result);
-        } else {
-            res.status(404).json({
-                error: "ID Not Found"
+    try {
+        if (parseInt(req.userId) !== parseInt(req.params.userid) && req.role !== 'admin') {
+            // User is not an admin, or does not have same ID as the one requested.
+            res.status(403).json({
+                error: "Unauthorized"
             });
+        } else {
+            const result = await userModel.get_user(req.params.userid);
+            if(result){
+                res.status(200).send(result);
+            } else {
+                res.status(404).json({
+                    error: "ID Not Found"
+                });
+            }
         }
+    } catch (error) {
+        res.status(500).json({error: "System unable to handle request"})
     }
     
 });
