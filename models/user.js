@@ -22,7 +22,7 @@ async function get_user(userId){
 
     if (role === "instructor"){
 
-        coursesTeached = [];
+        let coursesTeached = [];
         const courses = await db.collection('Courses').find({ instructorId: userId }).toArray();
         courses.forEach(course => {
             coursesTeached.push(`/courses/${course.id}`);
@@ -35,7 +35,7 @@ async function get_user(userId){
     }
     if (role === "student"){
 
-        coursesEnrolled = [];
+        let coursesEnrolled = [];
         const courses = await db.collection('Courses').find({ students: userId }).toArray();
         courses.forEach(course => {
             coursesEnrolled.push(`/courses/${course.id}`);

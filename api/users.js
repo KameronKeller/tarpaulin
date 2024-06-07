@@ -37,7 +37,7 @@ const UserSchema = {
 router.post('/', auth.authenticate, userModel.authorizeInsertUser, async (req, res) => {
     if(validateAgainstSchema(req.body, UserSchema)){
         try {
-            newUserInfo = extractValidFields(req.body, UserSchema);
+            const newUserInfo = extractValidFields(req.body, UserSchema);
             const result = await userModel.insert_user(newUserInfo);
             if(result){
                 res.status(201).send(result);
