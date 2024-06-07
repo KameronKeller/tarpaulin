@@ -1,12 +1,20 @@
 const { ObjectId } = require('mongodb')
 const { getDbReference } = require('../lib/mongo')
 const auth = require('../lib/auth');
+const { extractValidFields } = require('../lib/validation');
 
+const UserSchema = {
+    name: { required: true},
+    email: {required: true},
+    password: {required: true},
+    role: {required: true},
+    courseIds: {required: false}
+}
 
 async function get_user(userId){
     const db = getDbReference();
     // Query for a user
-    const user = await db.collection('Users').findOne({_id: new ObjectId(String(userId))});
+    const user = await db.collection('Users').findOne({_id: ObjectId.createFromHexString(userId)});
     if(!user){
         return null;
     }
@@ -70,4 +78,16 @@ async function get_user_by_email(userEmail){
     const result = await collection.findOne({email: userEmail})
     return result;
 }
+
+async function bulkInsertNewUsers(users) {
+    const usersToInsert = users.map( function (user) {
+        return extractValidFields(user, UserSchema)
+    });
+    const db = getDbReference();
+    const collection = db.collection('users');
+    const results = await collection.insertMany(usersToInsert);
+    return results.insertedIds;
+}
+
 exports.get_user_by_email = get_user_by_email
+exports.bulkInsertNewUsers = bulkInsertNewUsers
