@@ -5,7 +5,7 @@ const { getCourse } = require('../models/course');
 const { getAssignmentsForClass } = require('../models/assignment');
 
 const auth = require('../lib/auth')
-const coursesModel = require('../model/courses')
+const coursesModel = require('../models/course')
 
 
 const CoursesSchema = {
