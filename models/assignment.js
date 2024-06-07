@@ -1,18 +1,34 @@
 const { getDbReference } = require("../lib/mongo");
 const { ObjectId } = require("mongodb");
+const { extractValidFields } = require("../lib/validation");
 
-async function getAssignment(assignmentId) {
+const AssignmentSchema = {
+  courseId: { required: true },
+  title: { required: true },
+  points: { required: true },
+  due: { required: true },
+};
+
+function getAssignments() {
+  const db = getDbReference();
+  const collection = db.collection("Assignments");
+  return collection;
+}
+
+exports.getAssignments = getAssignments;
+
+async function getAssignment(id) {
   const assignments = getAssignments();
-  const assignment = assignments.findOne({
-    _id: ObjectId.createFromHexString(assignmentId),
+  const assignment = await assignments.findOne({
+    _id: id,
   });
   return assignment;
 }
 
 exports.getAssignment = getAssignment;
 
-async function insertAssignment(assignment) {
-  const assignment = extractValidFields(assignment, assignmentSchema);
+async function insertAssignment(assignmentInfo) {
+  const assignment = extractValidFields(assignmentInfo, assignmentSchema);
   const collection = getAssignments();
   const result = await collection.insertOne(assignment);
   return result.insertedId;
@@ -22,7 +38,7 @@ exports.insertAssignment = insertAssignment;
 
 async function deleteAssignment(id) {
   const collection = getAssignments();
-  const result = collection.deleteOne({ _id: id });
+  const result = await collection.deleteOne({ _id: id });
 
   return result.deletedCount;
 }
@@ -31,18 +47,24 @@ exports.deleteAssignment = deleteAssignment;
 
 async function updateAssignment(id, contents) {
   const collection = getAssignments();
-  result = await collection.updateOne(
+  const result = await collection.updateOne(
     { _id: id },
     {
       $set: contents,
     }
   );
+  return result;
 }
 
 exports.updateAssignment = updateAssignment;
 
-async function getAssignments() {
-  const db = getDbReference();
-  const collection = db.collection("Assignments");
-  return collection;
+async function bulkInsertNewAssignments(assignments) {
+  const assignmentsToInsert = assignments.map(function (assignment) {
+    return extractValidFields(assignment, AssignmentSchema);
+  });
+  const collection = getAssignments();
+  const result = await collection.insertMany(assignmentsToInsert);
+  return result.insertedIds;
 }
+
+exports.bulkInsertNewAssignments = bulkInsertNewAssignments;

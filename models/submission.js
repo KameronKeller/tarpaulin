@@ -50,7 +50,7 @@ async function bulkInsertNewSubmissions(submissions) {
 
 exports.bulkInsertNewSubmissions = bulkInsertNewSubmissions;
 
-async function getSubmissions() {
+function getSubmissions() {
   const db = getDbReference();
   const collection = db.collection("Submissions");
   return collection;

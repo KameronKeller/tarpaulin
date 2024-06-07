@@ -18,7 +18,9 @@ const { ObjectId } = require("mongodb");
 
 router.get("/:assignmentId", async (req, res, next) => {
   try {
-    const assignment = await getAssignment(req.params.assignmentId);
+    const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
+    console.log(`MY ID ${assignmentId}`)
+    const assignment = await getAssignment(assignmentId);
     delete assignment.submissions;
     res.status(200).send(assignment);
   } catch (err) {
@@ -48,8 +50,14 @@ router.post(
 
 router.delete("/:assignmentId", async (req, res, next) => {
   try {
-    const assignmentId = ObjectId.createFromHexString(req.params.photoId);
+    const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
     const deletedCount = deleteAssignment(assignmentId);
+    if (deletedCount === 1) {
+      res.status(204).send({
+        message: "Assignment Deleted",
+      });
+    } else {
+    }
   } catch (err) {
     res.status(404).send({
       error: err,
@@ -61,7 +69,7 @@ module.exports = router;
 
 router.patch("/:assignmentId", async (req, res, next) => {
   try {
-    const assignmentId = ObjectId.createFromHexString(req.params.photoId);
+    const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
     const result = updateAssignment(assignmentId, req.body);
     res.status(200).send({
       id: assignmentId,
@@ -93,7 +101,7 @@ router.get("/:id/submissions", async (req, res) => {
   } else {
     console.log(`TotalSubs: ${totalSubmissions}`);
     const lastPage = Math.ceil(totalSubmissions / pageSize);
-    submissionPage = parseInt(req.query.page) || 1;
+    var submissionPage = parseInt(req.query.page) || 1;
 
     submissionPage = submissionPage > lastPage ? 1 : submissionPage;
     submissionPage = submissionPage < 1 ? 1 : submissionPage;
