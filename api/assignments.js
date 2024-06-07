@@ -12,7 +12,6 @@ router.get('/', (req, res) => {
 
 router.get('/:id/submissions', async (req, res) => {
     const id = ObjectId.createFromHexString(req.params.id);
-    console.log(`AssignmentID: ${id}`);
     const Submissions = await getSubmissions();
     const pageSize = 10;
 
@@ -23,7 +22,6 @@ router.get('/:id/submissions', async (req, res) => {
             error: "No submissions found for the given assignment."
         });
     } else {
-        console.log(`TotalSubs: ${totalSubmissions}`);
         const lastPage = Math.ceil(totalSubmissions / pageSize);
         submissionPage = parseInt(req.query.page) || 1;
 
@@ -50,8 +48,6 @@ router.get('/:id/submissions', async (req, res) => {
         else {
             links.lastPage = "/businesses?page=1";
         }
-        console.log(submissions);
-        console
         res.status(200).send({submissions, "links": links});
     }
 })
@@ -63,34 +59,21 @@ router.post('/:id/submissions', async (req, res) => {
     * Creates a new submission for the given assignment
     */
     const assignmentId = ObjectId.createFromHexString(req.params.id);
-    console.log(`AssignmentID: ${assignmentId}`);
     const Assignments = await getAssignments();
-
-    // console.log(Assignments);
-
     assignment = await Assignments.findOne({ _id: assignmentId});
-
-    console.log(assignment);
-
     count = await Assignments.countDocuments({ _id: assignmentId });
-    console.log(validateAgainstSchema(req.body, SubmissionSchema));
-    console.log(`Count: ${count}`);
     if (count <= 0) {
-        console.log("COUNT");
         res.status(404).send({
             error: "Assignment not found"
         });
     }
     else if (validateAgainstSchema(req.body, SubmissionSchema)) {
         try {
-            console.log("Try")
             const submission = await insertSubmission(req.body);
-            console.log(`Submission: ${submission}`);
             if(submission) {
                 res.status(201).send({id: submission.id});
             }
         } catch (err) {
-            console.log(err);
             res.status(500).send({error: err});
         }
     } else {
