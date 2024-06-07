@@ -4,7 +4,8 @@
     "description": "Final Project For CS 493",
     "main": "server.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "node server.js",
+        "initdb": "node initDb.js"
     },
     "repository": {
         "type": "git",
@@ -26,6 +27,8 @@
     "devDependencies": {
         "@eslint/js": "^9.4.0",
         "eslint": "^9.4.0",
-        "globals": "^15.3.0"
+        "globals": "^15.3.0",
+        "morgan": "^1.10.0",
+        "redis": "^4.6.14"
     }
 }

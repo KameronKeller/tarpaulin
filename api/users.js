@@ -2,7 +2,7 @@ const { Router } = require('express')
 const router = Router()
 
 const auth = require('../lib/auth');
-const user = require('../model/user');
+const user = require('../models/user');
 const e = require('express');
 
 const { validateAgainstSchema } = require('../lib/validation');
@@ -31,7 +31,7 @@ router.get('/', (req, res) => {
  *  }
 */
 router.post('/', user.authorizeInsertUser, async (req, res) => {
-    if(validateAgainstSchema(req.body), Userschema){
+    if(validateAgainstSchema(req.body, UserSchema)){
         try {
             const result = await insert_user(req.body);
             if(result){

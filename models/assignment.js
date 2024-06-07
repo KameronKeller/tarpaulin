@@ -2,19 +2,18 @@ const { getDbReference } = require("../lib/mongo");
 const { ObjectId } = require("mongodb");
 
 async function getAssignment(assignmentId) {
-  const db = getDbReference();
-  const assignment = await db
-    .collection("Assignments")
-    .findOne({ _id: ObjectId.createFromHexString(assignmentId) });
+  const assignments = getAssignments();
+  const assignment = assignments.findOne({
+    _id: ObjectId.createFromHexString(assignmentId),
+  });
   return assignment;
 }
 
 exports.getAssignment = getAssignment;
 
 async function insertAssignment(assignment) {
-  const db = getDbReference();
   const assignment = extractValidFields(assignment, assignmentSchema);
-  const collection = db.collection("Assignments");
+  const collection = getAssignments();
   const result = await collection.insertOne(assignment);
   return result.insertedId;
 }
@@ -22,8 +21,7 @@ async function insertAssignment(assignment) {
 exports.insertAssignment = insertAssignment;
 
 async function deleteAssignment(id) {
-  const db = getDbReference();
-  const collection = db.collection("Assignments");
+  const collection = getAssignments();
   const result = collection.deleteOne({ _id: id });
 
   return result.deletedCount;
@@ -32,8 +30,7 @@ async function deleteAssignment(id) {
 exports.deleteAssignment = deleteAssignment;
 
 async function updateAssignment(id, contents) {
-  const db = getDbReference();
-  const collection = db.collection("Assignments");
+  const collection = getAssignments();
   result = await collection.updateOne(
     { _id: id },
     {
@@ -43,3 +40,9 @@ async function updateAssignment(id, contents) {
 }
 
 exports.updateAssignment = updateAssignment;
+
+async function getAssignments() {
+  const db = getDbReference();
+  const collection = db.collection("Assignments");
+  return collection;
+}
