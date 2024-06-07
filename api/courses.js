@@ -2,7 +2,7 @@ const { Router } = require('express')
 const router = Router()
 const {getDbReference} = require('../lib/mongo');
 const { getCourse } = require('../models/course');
-const { getAssignmentsForClass } = require('../models/assignment');
+const { getAssignmentsForCourse } = require('../models/assignment');
 
 const auth = require('../lib/auth')
 const coursesModel = require('../models/course')
@@ -127,7 +127,7 @@ router.post('/:courseId/students', auth.authenticate, auth.authorize(["admin", "
 router.get('/:id/assignment', async (req, res) => {
     try {
         console.log("Getting assignments for course: " + req.params.id);
-        results = await getAssignmentsForClass(req.params.id);
+        results = await getAssignmentsForCourse(req.params.id);
         res.status(200).send({"assignments": results});
     } catch (err) {
         res.status(404).send({
