@@ -68,3 +68,23 @@ async function bulkInsertNewAssignments(assignments) {
 }
 
 exports.bulkInsertNewAssignments = bulkInsertNewAssignments;
+
+async function getAssignmentsForCourse(courseId) {
+  const db = getDbReference();
+
+  const assignments = await db.collection('Assignments')
+                            .find({ courseId: courseId },
+                              {projection: {courseId: 1,
+                                title: 1,
+                                points: 1,
+                                due: 1, _id: 0}}
+                              ).toArray();
+  if (!assignments) {
+      console.log("NULL");
+      return null;
+  };
+  console.log("NOT NULL");
+  return assignments
+}
+
+exports.getAssignmentsForCourse = getAssignmentsForCourse;
