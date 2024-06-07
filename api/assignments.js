@@ -19,7 +19,7 @@ const { ObjectId } = require("mongodb");
 router.get("/:assignmentId", async (req, res, next) => {
   try {
     const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
-    console.log(`MY ID ${assignmentId}`)
+    console.log(`MY ID ${assignmentId}`);
     const assignment = await getAssignment(assignmentId);
     delete assignment.submissions;
     res.status(200).send(assignment);
@@ -51,12 +51,11 @@ router.post(
 router.delete("/:assignmentId", async (req, res, next) => {
   try {
     const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
-    const deletedCount = deleteAssignment(assignmentId);
+    const deletedCount = await deleteAssignment(assignmentId);
     if (deletedCount === 1) {
       res.status(204).send({
         message: "Assignment Deleted",
       });
-    } else {
     }
   } catch (err) {
     res.status(404).send({
