@@ -2,30 +2,45 @@ const { Router } = require('express')
 const router = Router()
 
 const auth = require('../lib/auth')
-const { delete_course, get_courses_by_id } = require('../model/courses')
+const coursesModel = require('../model/courses')
+
+
+const CoursesSchema = {
+    subjectCode: {required: true},
+    number: {required: true},
+    title: {required: true},
+    term: {required: true},
+    instructorId: {required: true},
+    students: {required: true}
+}
 
 /* GET /courses/{id}/students
 *   Returns a list containing the User IDs of all students currently enrolled in the Course. 
 *   Only an authenticated User with 'admin' role or an authenticated 'instructor' User 
 *   whose ID matches the instructorId of the Course can fetch the list of enrolled students.
 */
-router.get('/:courseId', auth.authenticate, auth.authorize(["admin", "instructor"]), async (req, res, next) => {
+router.get('/:courseId/students', auth.authenticate, auth.authorize(["admin", "instructor"]), async (req, res, next) => {
     try {
-        const course = get_courses_by_id(req.params.courseId);
-        if((req.role == "instructor" && course.instructorId == req.userId) || req.role == "admin"){
-            // An admin and an instructor with the same id as in the course can view the students
-            const students = course.students;
-            res.send(200).json({students})
+        const course = await coursesModel.get_courses_by_id(req.params.courseId);
+        if(course){
+            if((req.role == "instructor" && course.instructorId == req.userId) || req.role == "admin"){
+                // An admin and an instructor with the same id as in the course can view the students
+                const students = course.students;
+                res.status(200).json({students});
+
+            } else {
+                // Unauthorized
+                res.status(403).json({
+                    error: "Unauthorized"
+                });
+            }
         } else {
-            // Unauthorized
-            res.send(404).json({
-                error: "Unauthorized"
-            })
+            res.status(404).json({ error: "Invalid course id"});
         }
 
     } catch (error) {
         res.status(500).json({
-            error: error
+            error: "Cannot process request"
         })
     }
 })
@@ -37,17 +52,17 @@ router.get('/:courseId', auth.authenticate, auth.authorize(["admin", "instructor
 */
 router.delete('/:courseId', auth.authenticate, auth.authorize(["admin"]), async (req, res, next) => {
     try {
-        result = await delete_course(req.params.courseId);
+        result = await coursesModel.delete_course(req.params.courseId);
         if(result == -1){
             res.status(404).json({
-                error: "ID Not Found"
+                error: "Invalid course id"
             })
         } else {
             res.status(204).end();
         }
     } catch (error) {
         res.status(500).json({
-            error: error
+            error: "Cannot process request"
         });
     }
 })
@@ -69,35 +84,39 @@ router.delete('/:courseId', auth.authenticate, auth.authorize(["admin"]), async 
 *     ]
 *   }
 */
-router.post('/:courseId', auth.authenticate, auth.authorize(["admin", "instructor"]), async (req, res, next) => {
-    if(req.body.add || req.body.remove){
-        try {
-            const course = get_courses_by_id(req.params.courseId);
-            
-            if((req.role == "instructor" && course.instructorId == req.userId) || req.role == "admin"){
-                // An admin and an instructor with the same id as in the course can view the students
-                // Update the course's students with the id's found in the add or remove array.
-                update_students(req, course._id);
-                res.send(200).json({
-                    success: "Successfully updated courses students"
-                });
+router.post('/:courseId/students', auth.authenticate, auth.authorize(["admin", "instructor"]), async (req, res, next) => {
+    try {
+        if(req.body.add || req.body.remove){
+            const course = await coursesModel.get_courses_by_id(req.params.courseId);
+            if(course){
+
+                if((req.role == "instructor" && course.instructorId == req.userId) || req.role == "admin"){
+                    // An admin and an instructor with the same id as in the course can view the students
+                    // Update the course's students with the id's found in the add or remove array.
+                    await coursesModel.update_students(req, course._id);
+                    res.status(200).json({
+                        success: "Successfully updated courses students"
+                    });
+                } else {
+                    // Unauthorized
+                    res.status(403).json({
+                        error: "Unauthorized"
+                    });
+                }
             } else {
-                // Unauthorized
-                res.send(404).json({
-                    error: "Unauthorized"
-                })
+                res.status(404).json({ error: "Invalid course id"});
             }
 
-        } catch (error) {
-            res.status(500).json({
-                error: error
+        } else {
+            // incorrect fields passed
+            res.status(400).json({
+                error: "Invalid fields in request"
             });
         }
-    } else {
-        // incorrect fields passed
-        res.send(400).json({
-            error: "Invalid fields in request"
-        })
+    } catch (error) {
+        res.status(500).json({
+            error: "Cannot process request"
+        });
     }
 })
 
