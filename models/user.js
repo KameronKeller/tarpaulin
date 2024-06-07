@@ -2,6 +2,7 @@ const { ObjectId } = require('mongodb')
 const { getDbReference } = require('../lib/mongo')
 const auth = require('../lib/auth');
 const { extractValidFields } = require('../lib/validation');
+var bcrypt = require("bcryptjs");
 
 const UserSchema = {
     name: { required: true},
@@ -79,9 +80,20 @@ async function get_user_by_email(userEmail){
     return result;
 }
 
+async function getUserById(id) {
+    const db = getDbReference();
+    const collection = db.collection("Users");
+    const result = await collection.findOne({_id: ObjectId.createFromHexString(id)})
+    return result;
+}
+
+exports.getUserById = getUserById
+
 async function bulkInsertNewUsers(users) {
     const usersToInsert = users.map( function (user) {
-        return extractValidFields(user, UserSchema)
+        let extractedUser = extractValidFields(user, UserSchema)
+        extractedUser.password = bcrypt.hashSync(user.password, 8)
+        return extractedUser
     });
     const db = getDbReference();
     const collection = db.collection('Users');
