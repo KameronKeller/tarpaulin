@@ -80,7 +80,7 @@ async function getAssignmentsForCourse(courseId) {
                                 points: 1,
                                 due: 1, _id: 0
                               }})
-                              .toArray();
+                            .toArray();
   if (!assignments) {
       return null;
   };
