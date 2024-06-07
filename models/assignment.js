@@ -74,16 +74,16 @@ async function getAssignmentsForCourse(courseId) {
 
   const assignments = await db.collection('Assignments')
                             .find({ courseId: courseId },
-                              {projection: {courseId: 1,
+                              {projection: {
+                                courseId: 1,
                                 title: 1,
                                 points: 1,
-                                due: 1, _id: 0}}
-                              ).toArray();
+                                due: 1, _id: 0
+                              }})
+                              .toArray();
   if (!assignments) {
-      console.log("NULL");
       return null;
   };
-  console.log("NOT NULL");
   return assignments
 }
 
