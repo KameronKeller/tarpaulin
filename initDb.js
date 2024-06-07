@@ -56,13 +56,18 @@ connectToDb(async function () {
    */
   if (mongoCreateUser && mongoCreatePassword) {
     const db = getDbReference()
-    const result = await db.command({
-      createUser: mongoCreateUser,
-      pwd: mongoCreatePassword, 
-      roles: [{role: "readWrite", db: mongoDbName}],
+    const users = await db.command({usersInfo: 1});
+    const userExists = users.users.some(user => user.user === mongoCreateUser)
 
-    })
-    console.log("== New user created:", result)
+    if (!userExists) {
+      const result = await db.command({
+        createUser: mongoCreateUser,
+        pwd: mongoCreatePassword, 
+        roles: [{role: "readWrite", db: mongoDbName}],
+
+      })
+      console.log("== New user created:", result)
+    }
   }
 
   closeDbConnection(function () {
