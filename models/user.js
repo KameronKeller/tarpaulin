@@ -84,7 +84,7 @@ async function bulkInsertNewUsers(users) {
         return extractValidFields(user, UserSchema)
     });
     const db = getDbReference();
-    const collection = db.collection('users');
+    const collection = db.collection('Users');
     const results = await collection.insertMany(usersToInsert);
     return results.insertedIds;
 }
