@@ -15,7 +15,7 @@ const CourseSchema = {
 async function getCourse(courseId) {
   const courses = getCourses();
   const course = courses.findOne({
-    _id: new ObjectId.createFromHexString(courseId),
+    _id: ObjectId.createFromHexString(courseId),
   });
   if (!course) {
     return null;
