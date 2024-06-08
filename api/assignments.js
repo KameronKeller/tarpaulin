@@ -43,10 +43,10 @@ router.post(
         });
       } catch (err) {
         if (err.message === "Unauthorized User") {
-          res.status(403).send({ error: "Unauthorized User" });
+          res.status(403).send({ error: err.message });
         } else {
           res.status(400).send({
-            error: err,
+            error: err.message,
           });
         }
       }
@@ -64,10 +64,7 @@ router.delete(
   authorize([ROLES.admin, ROLES.instructor]),
   async (req, res, next) => {
     try {
-      const assignmentId = ObjectId.createFromHexString(
-        req.params.assignmentId
-      );
-      const deletedCount = await deleteAssignment(assignmentId);
+      const deletedCount = await deleteAssignment(req);
       if (deletedCount === 1) {
         res.status(204).send({
           message: "Success",
@@ -75,7 +72,7 @@ router.delete(
       }
     } catch (err) {
       res.status(404).send({
-        error: err,
+        error: err.message,
       });
     }
   }

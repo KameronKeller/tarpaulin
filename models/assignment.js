@@ -56,10 +56,27 @@ async function authorizeCourseInstructor(instructorId, courseId) {
   return course.instructorId.toString() === instructorId;
 }
 
-async function deleteAssignment(id) {
+async function deleteAssignment(req) {
+  let assignment;
+  let id;
   const collection = getAssignments();
+  try {
+    id = ObjectId.createFromHexString(req.params.assignmentId);
+  } catch (err) {
+    throw new Error("Invalid Assignment ID");
+  }
+  assignment = await collection.findOne({ _id: id });
+  if (!assignment) throw new Error("Assignment Not Found");
+  if (req.role === ROLES.instructor) {
+    const isAuthorized = await authorizeCourseInstructor(
+      req.userId,
+      assignment.courseId
+    );
+    if (!isAuthorized) {
+      throw new Error("Unauthorized User");
+    }
+  }
   const result = await collection.deleteOne({ _id: id });
-
   return result.deletedCount;
 }
 
