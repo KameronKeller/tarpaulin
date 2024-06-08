@@ -47,21 +47,28 @@ router.post(
   }
 );
 
-router.delete("/:assignmentId", async (req, res, next) => {
-  try {
-    const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
-    const deletedCount = await deleteAssignment(assignmentId);
-    if (deletedCount === 1) {
-      res.status(204).send({
-        message: "Assignment Deleted",
+router.delete(
+  "/:assignmentId",
+  authenticate,
+  authorize([ROLES.admin, ROLES.instructor]),
+  async (req, res, next) => {
+    try {
+      const assignmentId = ObjectId.createFromHexString(
+        req.params.assignmentId
+      );
+      const deletedCount = await deleteAssignment(assignmentId);
+      if (deletedCount === 1) {
+        res.status(204).send({
+          message: "Success",
+        });
+      }
+    } catch (err) {
+      res.status(404).send({
+        error: err,
       });
     }
-  } catch (err) {
-    res.status(404).send({
-      error: err,
-    });
   }
-});
+);
 
 module.exports = router;
 

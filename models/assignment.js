@@ -72,19 +72,25 @@ exports.bulkInsertNewAssignments = bulkInsertNewAssignments;
 async function getAssignmentsForCourse(courseId) {
   const db = getDbReference();
 
-  const assignments = await db.collection('Assignments')
-                            .find({ courseId: courseId },
-                              {projection: {
-                                courseId: 1,
-                                title: 1,
-                                points: 1,
-                                due: 1, _id: 0
-                              }})
-                            .toArray();
+  const assignments = await db
+    .collection("Assignments")
+    .find(
+      { courseId: courseId },
+      {
+        projection: {
+          courseId: 1,
+          title: 1,
+          points: 1,
+          due: 1,
+          _id: 0,
+        },
+      }
+    )
+    .toArray();
   if (!assignments) {
-      return null;
-  };
-  return assignments
+    return null;
+  }
+  return assignments;
 }
 
 exports.getAssignmentsForCourse = getAssignmentsForCourse;
