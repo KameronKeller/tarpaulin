@@ -57,6 +57,8 @@ async function authorizeCourseInstructor(instructorId, courseId) {
   return course.instructorId.toString() === instructorId;
 }
 
+exports.authorizeCourseInstructor = authorizeCourseInstructor;
+
 async function deleteAssignment(req) {
   let assignment;
   let id;
