@@ -20,7 +20,7 @@ exports.getAssignments = getAssignments;
 async function getAssignment(id) {
   const assignments = getAssignments();
   const assignment = await assignments.findOne({
-    _id: id,
+    _id: ObjectId(id),
   });
   return assignment;
 }
