@@ -29,21 +29,3 @@ services:
       - db
     restart: on-failure
     command: npm run initdb
-
-  api:
-    build: .
-    ports:
-      - 3000:3000
-    environment:
-      MONGO_HOST: db
-      MONGO_USER: ${MONGO_USER}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_DB_NAME: ${MONGO_DB_NAME}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-    depends_on:
-      - db
-      - db-init
-      - redis
-    restart: on-failure
