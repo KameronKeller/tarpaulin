@@ -124,9 +124,8 @@ router.post('/:courseId/students', auth.authenticate, auth.authorize(["admin", "
 })
 
 
-router.get('/:id/assignment', async (req, res) => {
+router.get('/:id/assignments', auth.authenticate, async (req, res) => {
     try {
-        console.log("Getting assignments for course: " + req.params.id);
         results = await getAssignmentsForCourse(req.params.id);
         res.status(200).send({"assignments": results});
     } catch (err) {
