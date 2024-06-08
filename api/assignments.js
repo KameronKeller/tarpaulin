@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const router = Router();
+const auth = require('../lib/auth')
 const {
   getSubmissions,
   SubmissionSchema,
@@ -82,7 +83,7 @@ router.patch("/:assignmentId", async (req, res, next) => {
 
 module.exports = router;
 
-router.get("/:id/submissions", async (req, res) => {
+router.get("/:id/submissions", auth.authenticate, auth.authorize(["admin", "instructor"]), async (req, res) => {
   const id = ObjectId.createFromHexString(req.params.id);
   const Submissions = await getSubmissions();
   const pageSize = 10;
