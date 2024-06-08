@@ -1,6 +1,9 @@
 const { getDbReference } = require("../lib/mongo");
 const { ObjectId } = require("mongodb");
 const { extractValidFields } = require("../lib/validation");
+const { ROLES } = require("../lib/auth");
+const { getUserById } = require("./user");
+const { getCourseById } = require("./course");
 
 const AssignmentSchema = {
   courseId: { required: true },
@@ -8,6 +11,8 @@ const AssignmentSchema = {
   points: { required: true },
   due: { required: true },
 };
+
+exports.AssignmentSchema = AssignmentSchema;
 
 function getAssignments() {
   const db = getDbReference();
@@ -27,14 +32,29 @@ async function getAssignment(id) {
 
 exports.getAssignment = getAssignment;
 
-async function insertAssignment(assignmentInfo) {
+async function insertAssignment(req, res) {
+  const assignmentInfo = req.body;
   const assignment = extractValidFields(assignmentInfo, AssignmentSchema);
+  if (req.role === ROLES.instructor) {
+    const isAuthorized = await authorizeInsertUser(
+      req.userId,
+      assignment.courseId
+    );
+    if (!isAuthorized) {
+      throw new Error("Unauthorized User");
+    }
+  }
   const collection = getAssignments();
   const result = await collection.insertOne(assignment);
   return result.insertedId;
 }
 
 exports.insertAssignment = insertAssignment;
+
+async function authorizeInsertUser(instructorId, courseId) {
+  const course = await getCourseById(courseId);
+  return course.instructorId.toString() === instructorId;
+}
 
 async function deleteAssignment(id) {
   const collection = getAssignments();

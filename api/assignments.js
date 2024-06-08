@@ -10,6 +10,7 @@ const {
   insertAssignment,
   deleteAssignment,
   updateAssignment,
+  AssignmentSchema,
 } = require("../models/assignment");
 
 const { validateAgainstSchema } = require("../lib/validation");
@@ -34,12 +35,22 @@ router.post(
   authenticate,
   authorize([ROLES.admin, ROLES.instructor]),
   async (req, res, next) => {
-    try {
-      const id = await insertAssignment(req.body);
-      res.status(201).send({
-        id: id,
-      });
-    } catch (err) {
+    if (validateAgainstSchema(req.body, AssignmentSchema)) {
+      try {
+        const id = await insertAssignment(req);
+        res.status(201).send({
+          id: id,
+        });
+      } catch (err) {
+        if (err.message === "Unauthorized User") {
+          res.status(403).send({ error: "Unauthorized User" });
+        } else {
+          res.status(400).send({
+            error: err,
+          });
+        }
+      }
+    } else {
       res.status(400).send({
         error: "Request body is not a valid assignment object",
       });
