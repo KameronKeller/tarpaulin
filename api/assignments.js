@@ -11,6 +11,7 @@ const {
   deleteAssignment,
   updateAssignment,
   AssignmentSchema,
+  getAssignments,
 } = require("../models/assignment");
 
 const { validateAgainstSchema } = require("../lib/validation");
@@ -112,9 +113,21 @@ router.patch(
 module.exports = router;
 
 router.get("/:id/submissions", async (req, res) => {
-  const id = ObjectId.createFromHexString(req.params.id);
   const Submissions = await getSubmissions();
+  const Assignments = await getAssignments();
   const pageSize = 10;
+
+  let id;
+  let assignment;
+  try {
+    id = ObjectId.createFromHexString(req.params.id);
+    assignment = await Assignments.findOne({ _id: id });
+    if (!assignment) throw new Error();
+  } catch (err) {
+    return res.status(404).send({
+      error: "Invalid Assignment ID",
+    });
+  }
 
   const totalSubmissions = await Submissions.countDocuments({
     assignmentId: id,
