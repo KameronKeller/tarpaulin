@@ -80,20 +80,34 @@ router.delete(
 
 module.exports = router;
 
-router.patch("/:assignmentId", async (req, res, next) => {
-  try {
-    const assignmentId = ObjectId.createFromHexString(req.params.assignmentId);
-    const result = updateAssignment(assignmentId, req.body);
-    res.status(200).send({
-      id: assignmentId,
-      message: "Assignment updated successfully",
-    });
-  } catch (err) {
-    res.status(404).send({
-      error: err,
-    });
+router.patch(
+  "/:assignmentId",
+  authenticate,
+  authorize([ROLES.admin, ROLES.instructor]),
+  async (req, res, next) => {
+    try {
+      const result = await updateAssignment(req);
+      res.status(200).send({
+        id: req.params.assignmentId,
+        message: "Success",
+      });
+    } catch (err) {
+      if (err.message === "Invalid Assignment ID") {
+        res.status(404).send({
+          error: err.message,
+        });
+      } else if (err.message === "Unauthorized User") {
+        res.status(403).send({
+          error: err.message,
+        });
+      } else {
+        res.status(400).send({
+          error: err.message,
+        });
+      }
+    }
   }
-});
+);
 
 module.exports = router;
 

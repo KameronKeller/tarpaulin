@@ -53,6 +53,7 @@ exports.insertAssignment = insertAssignment;
 
 async function authorizeCourseInstructor(instructorId, courseId) {
   const course = await getCourseById(courseId);
+  if (!course) throw new Error("Request body is not a valid assignment object");
   return course.instructorId.toString() === instructorId;
 }
 
@@ -66,7 +67,7 @@ async function deleteAssignment(req) {
     throw new Error("Invalid Assignment ID");
   }
   assignment = await collection.findOne({ _id: id });
-  if (!assignment) throw new Error("Assignment Not Found");
+  if (!assignment) throw new Error("Invalid Assignment ID");
   if (req.role === ROLES.instructor) {
     const isAuthorized = await authorizeCourseInstructor(
       req.userId,
@@ -82,8 +83,33 @@ async function deleteAssignment(req) {
 
 exports.deleteAssignment = deleteAssignment;
 
-async function updateAssignment(id, contents) {
+async function updateAssignment(req) {
+  let id;
+  let assignment;
   const collection = getAssignments();
+  try {
+    id = ObjectId.createFromHexString(req.params.assignmentId);
+  } catch (err) {
+    throw new Error("Invalid Assignment ID");
+  }
+  assignment = await collection.findOne({ _id: id });
+  if (!assignment) throw new Error("Invalid Assignment ID");
+  const contents = extractValidFields(req.body, AssignmentSchema);
+  if (JSON.stringify(contents) === "{}") {
+    throw new Error(
+      "The request body was either not present or did not contain any fields related to Assignment objects"
+    );
+  }
+  if (req.role === ROLES.instructor) {
+    const isAuthorized = await authorizeCourseInstructor(
+      req.userId,
+      assignment.courseId
+    );
+    if (!isAuthorized) {
+      throw new Error("Unauthorized User");
+    }
+  }
+
   const result = await collection.updateOne(
     { _id: id },
     {
