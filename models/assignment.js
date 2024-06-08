@@ -71,7 +71,7 @@ async function deleteAssignment(req) {
   if (req.role === ROLES.instructor) {
     const isAuthorized = await authorizeCourseInstructor(
       req.userId,
-      assignment.courseId
+      assignment.courseId.toString()
     );
     if (!isAuthorized) {
       throw new Error("Unauthorized User");
