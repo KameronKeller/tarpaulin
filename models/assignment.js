@@ -36,7 +36,7 @@ async function insertAssignment(req, res) {
   const assignmentInfo = req.body;
   const assignment = extractValidFields(assignmentInfo, AssignmentSchema);
   if (req.role === ROLES.instructor) {
-    const isAuthorized = await authorizeInsertUser(
+    const isAuthorized = await authorizeCourseInstructor(
       req.userId,
       assignment.courseId
     );
@@ -51,7 +51,7 @@ async function insertAssignment(req, res) {
 
 exports.insertAssignment = insertAssignment;
 
-async function authorizeInsertUser(instructorId, courseId) {
+async function authorizeCourseInstructor(instructorId, courseId) {
   const course = await getCourseById(courseId);
   return course.instructorId.toString() === instructorId;
 }
