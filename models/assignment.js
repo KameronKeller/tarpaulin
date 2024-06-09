@@ -2,7 +2,7 @@ const { getDbReference } = require("../lib/mongo");
 const { ObjectId } = require("mongodb");
 const { extractValidFields } = require("../lib/validation");
 const { ROLES } = require("../lib/auth");
-const { getCourseById } = require("./course");
+const { getCourse } = require("./course");
 
 const AssignmentSchema = {
   courseId: { required: true },
@@ -51,7 +51,7 @@ async function insertAssignment(req) {
 exports.insertAssignment = insertAssignment;
 
 async function authorizeCourseInstructor(instructorId, courseId) {
-  const course = await getCourseById(courseId);
+  const course = await getCourse(courseId);
   if (!course) throw new Error("Request body is not a valid assignment object");
   return course.instructorId.toString() === instructorId;
 }
