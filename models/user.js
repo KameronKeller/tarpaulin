@@ -5,6 +5,7 @@ const { extractValidFields } = require('../lib/validation');
 var bcrypt = require("bcryptjs");
 
 const UserSchema = {
+    _id : {required: false},
     name: { required: true},
     email: {required: true},
     password: {required: true},

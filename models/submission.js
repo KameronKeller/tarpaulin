@@ -6,6 +6,7 @@ const fs = require("fs");
 
 // assignmentId, studentId, timestamp, grade, file
 const SubmissionSchema = {
+  _id: { required: false },
   assignmentId: { required: true },
   studentId: { required: true },
   timestamp: { required: true },
