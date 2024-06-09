@@ -2,12 +2,13 @@ const { Router } = require("express");
 const { authenticate, authorize, ROLES, isAuthorized } = require("../lib/auth");
 const router = Router();
 const {getDbReference} = require('../lib/mongo');
-const { getCourse } = require('../models/course');
+const { getCourse, insertCourse } = require('../models/course');
 const { getAssignmentsForCourse } = require('../models/assignment');
 
 const auth = require('../lib/auth')
-const coursesModel = require('../models/course');
+const {CourseSchema} = require('../models/course');
 const { getPaginationLinks } = require("../lib/pagination");
+const { validateAgainstSchema } = require("../lib/validation");
 
 const CoursesSchema = {
     subjectCode: {required: true},
@@ -32,9 +33,6 @@ router.get("/", async (req, res) => {
     number: req.query.number,
     term: req.query.term
   };
-  console.log("== subject", subject);
-  console.log("== courseNumber", courseNumber);
-  console.log("== term", term);
 
   const pageSize = 1;
   const Courses = await coursesModel.getCourses();
@@ -102,9 +100,9 @@ router.post(
   authorize([ROLES.admin]),
   async (req, res) => {
     // TODO: update validation
-    // if (validateAgainstSchema(req.body, BusinessSchema)) {
+    if (validateAgainstSchema(req.body, CourseSchema)) {
     try {
-      // const id = await insertNewCourse(req.body)
+      const id = await insertCourse(req.body)
       res.status(201).send({
         id: id,
       });
@@ -114,12 +112,12 @@ router.post(
         error: "Error inserting course into DB.  Please try again later.",
       });
     }
-    // } else {
-    //   res.status(400).send({
-    //     error: "Request body is not a valid course object.",
-    //   });
+    } else {
+      res.status(400).send({
+        error: "Request body is not a valid course object.",
+      });
   }
-  //   }
+    }
 );
 
 /*
