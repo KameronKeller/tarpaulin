@@ -2,13 +2,14 @@ const { Router } = require("express");
 const { authenticate, authorize, ROLES, isAuthorized } = require("../lib/auth");
 const router = Router();
 const {getDbReference} = require('../lib/mongo');
-const { getCourse, insertCourse } = require('../models/course');
-const { getAssignmentsForCourse } = require('../models/assignment');
+const { getCourse, insertCourse, updateCourse } = require('../models/course');
+const { getAssignmentsForCourse, authorizeCourseInstructor } = require('../models/assignment');
 
 const auth = require('../lib/auth')
 const {CourseSchema} = require('../models/course');
 const { getPaginationLinks } = require("../lib/pagination");
 const { validateAgainstSchema } = require("../lib/validation");
+const { getUserById } = require("../models/user");
 
 const CoursesSchema = {
     subjectCode: {required: true},
@@ -94,31 +95,39 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post(
-  "/",
-  authenticate,
-  authorize([ROLES.admin]),
-  async (req, res) => {
-    // TODO: update validation
-    if (validateAgainstSchema(req.body, CourseSchema)) {
+router.post("/", authenticate, authorize([ROLES.admin]), async (req, res) => {
+  // TODO: update validation
+  if (validateAgainstSchema(req.body, CourseSchema)) {
     try {
-      const id = await insertCourse(req.body)
+      const user = await getUserById(req.body.instructorId)
+      if (user.role !== ROLES.instructor) {
+        return res.status(400).send({
+          error: "Given instructorId is not an instructor"
+        })
+      }
+    } catch (err) {
+      return res.status(400).send({
+        error: "Given instructorId is not an instructor"
+      })
+    }
+
+
+    try {
+      const id = await insertCourse(req.body);
       res.status(201).send({
         id: id,
       });
     } catch (err) {
-      console.error(err);
       res.status(500).send({
         error: "Error inserting course into DB.  Please try again later.",
       });
     }
-    } else {
-      res.status(400).send({
-        error: "Request body is not a valid course object.",
-      });
+  } else {
+    res.status(400).send({
+      error: "Request body is not a valid course object.",
+    });
   }
-    }
-);
+});
 
 /*
 
@@ -151,35 +160,42 @@ router.patch(
   "/:id",
   authenticate,
   authorize([ROLES.admin, ROLES.instructor]),
-  async function (req, res, next) {
+  async function (req, res) {
+    try {
 
-    if (req.role === ROLES.instructor) {
-        const isAuthorized = await authorizeCourseInstructor(
-          req.userId,
-          assignment.courseId.toString()
-        );
-        if (!isAuthorized) {
-          return res.status(403).send({
-            error: "Unauthorized User",
-          });
-        }
-      }
-
-    if (await isAuthorized(req)) {
-      const courseId = req.params.courseId;
-      const result = await Course.update(req.body, {
-        where: { id: courseId },
-        fields: CourseFields,
-      });
-      if (result[0] > 0) {
-        res.status(204).send();
-      } else {
-        next();
-      }
-    } else {
-      res.status(403).json({
-        error: "Unauthorized to access the specified resource",
-      });
+        // check if valid data
+        if (validateAgainstSchema(req.body, CourseSchema)) {
+            // get the course
+            const course = await getCourse(req.params.id);
+    
+            // check if authorized
+            if (req.role === ROLES.instructor) { 
+                const isAuthorized = await authorizeCourseInstructor(
+                    req.userId,
+                    course._id.toString()
+                  );
+                  if (!isAuthorized) {
+                    return res.status(403).send({
+                      error: "Unauthorized User",
+                    });
+                  }
+            }
+            // perform the update
+            const result = updateCourse(req.params.id, req.body)
+    
+            // return 200 OK
+            res.status(200).send();
+    
+    
+        } else {
+        res.status(400).send({
+          error: "Request body is not a valid course object.",
+        })
+    }
+    } catch (error) {
+        res.status(500).json({
+            error: "Cannot process request"
+        })
     }
   }
 );
