@@ -5,6 +5,7 @@ const { ROLES } = require("../lib/auth");
 const { getCourseById } = require("./course");
 
 const AssignmentSchema = {
+  _id: { required: false },
   courseId: { required: true },
   title: { required: true },
   points: { required: true },
