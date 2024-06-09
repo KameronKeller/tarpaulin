@@ -3,6 +3,8 @@ const { getDbReference } = require("../lib/mongo");
 const auth = require("../lib/auth");
 const { extractValidFields } = require("../lib/validation");
 const fs = require("fs");
+const crypto = require("crypto");
+const path = require("path");
 
 // assignmentId, studentId, timestamp, grade, file
 const SubmissionSchema = {
@@ -38,13 +40,40 @@ async function insertSubmission(req) {
 exports.insertSubmission = insertSubmission;
 
 async function bulkInsertNewSubmissions(submissions) {
+  const db = getDbReference();
+  const bucket = new GridFSBucket(db, { bucketName: "submissions" });
   const submissionsToinsert = submissions.map(function (submission) {
-    return extractValidFields(submission, SubmissionSchema);
-  });
+    return new Promise((resolve, reject) => {
+      var fields = extractValidFields(submission, SubmissionSchema);
+      var metadata = {
+        contentType: "text/plain",
+        assignmentId: fields.assignmentId,
+        studentId: fields.studentId,
+        timestamp: fields.timestamp,
+        grade: fields.grade,
+      };
+      console.log(`Metadata ${metadata}`);
 
-  const collection = getSubmissions();
-  const results = await collection.insertMany(submissionsToinsert);
-  return results.insertedIds;
+      const fileName = crypto.pseudoRandomBytes(16).toString("hex");
+
+      const uploadStream = bucket.openUploadStreamWithId(fields._id, fileName, { metadata: metadata });
+      console.log(`FileName: ${fileName}`);
+      fs.createReadStream(path.join(__dirname, '../test.txt'))
+        .on("error", (err) => { console.log("new error block"); console.log(err.message); })
+        .pipe(uploadStream) 
+        .on("error", (err) => {
+          console.log(err.message);
+          reject(err);
+        })
+        .on("finish", () => {
+          console.log(uploadStream.id);
+          resolve(uploadStream.id);
+        });
+    });
+  });
+  await Promise.all(submissionsToinsert);
+
+  return [0,1,2,3,4,5,6,7,8,9];
 }
 
 exports.bulkInsertNewSubmissions = bulkInsertNewSubmissions;
@@ -65,8 +94,8 @@ async function _saveSubmissionfile(req) {
     const bucket = new GridFSBucket(db, { bucketName: "submissions" });
     const metadata = {
       contentType: req.file.mimetype,
-      assignmentId: submission.assignmentId,
-      studentId: submission.studentId,
+      assignmentId: ObjectId.createFromHexString(submission.assignmentId),
+      studentId: ObjectId.createFromHexString(submission.studentId),
       timestamp: submission.timestamp,
       grade: submission.grade,
     };
