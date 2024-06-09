@@ -2,7 +2,6 @@ const { getDbReference } = require("../lib/mongo");
 const { ObjectId } = require("mongodb");
 const { extractValidFields } = require("../lib/validation");
 const { ROLES } = require("../lib/auth");
-const { getUserById } = require("./user");
 const { getCourseById } = require("./course");
 
 const AssignmentSchema = {
@@ -32,7 +31,7 @@ async function getAssignment(id) {
 
 exports.getAssignment = getAssignment;
 
-async function insertAssignment(req, res) {
+async function insertAssignment(req) {
   const assignmentInfo = req.body;
   const assignment = extractValidFields(assignmentInfo, AssignmentSchema);
   if (req.role === ROLES.instructor) {
@@ -123,17 +122,6 @@ async function updateAssignment(req) {
 
 exports.updateAssignment = updateAssignment;
 
-async function bulkInsertNewAssignments(assignments) {
-  const assignmentsToInsert = assignments.map(function (assignment) {
-    return extractValidFields(assignment, AssignmentSchema);
-  });
-  const collection = getAssignments();
-  const result = await collection.insertMany(assignmentsToInsert);
-  return result.insertedIds;
-}
-
-exports.bulkInsertNewAssignments = bulkInsertNewAssignments;
-
 async function getAssignmentsForCourse(courseId) {
   const db = getDbReference();
 
@@ -159,3 +147,15 @@ async function getAssignmentsForCourse(courseId) {
 }
 
 exports.getAssignmentsForCourse = getAssignmentsForCourse;
+
+
+async function bulkInsertNewAssignments(assignments) {
+  const assignmentsToInsert = assignments.map(function (assignment) {
+    return extractValidFields(assignment, AssignmentSchema);
+  });
+  const collection = getAssignments();
+  const result = await collection.insertMany(assignmentsToInsert);
+  return result.insertedIds;
+}
+
+exports.bulkInsertNewAssignments = bulkInsertNewAssignments;

@@ -18,6 +18,40 @@ const {
 const { validateAgainstSchema } = require("../lib/validation");
 const { authorize, authenticate, ROLES } = require("../lib/auth");
 const { ObjectId } = require("mongodb");
+const multer = require("multer");
+const crypto = require("crypto");
+const fs = require("fs");
+
+const fileTypes = {
+  "text/plain": "txt",
+  "application/pdf": "pdf",
+};
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: `${__dirname}/uploads`,
+    filename: (req, file, callback) => {
+      const filename = crypto.pseudoRandomBytes(16).toString("hex");
+      const extension = fileTypes[file.mimetype];
+      callback(null, `${filename}.${extension}`);
+    },
+  }),
+  fileFilter: (req, file, callback) => {
+    callback(null, !!fileTypes[file.mimetype]);
+  },
+});
+
+function _removeUploadedFile(file) {
+  return new Promise((resolve, reject) => {
+    fs.unlink(file.path, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 router.get("/:assignmentId", async (req, res, next) => {
   try {
@@ -184,32 +218,41 @@ router.get(
   }
 );
 
-router.post("/:id/submissions", async (req, res) => {
-  /*
-   * assignmentID, studentId, timestamp, grade, file
-   * Creates a new submission for the given assignment
-   */
-  const assignmentId = ObjectId.createFromHexString(req.params.id);
-  const Assignments = await getAssignments();
-  assignment = await Assignments.findOne({ _id: assignmentId });
-  count = await Assignments.countDocuments({ _id: assignmentId });
+router.post(
+  "/:id/submissions",
+  authenticate,
+  upload.single("submission"),
+  async (req, res) => {
+    /*
+     * assignmentID, studentId, timestamp, grade, file
+     * Creates a new submission for the given assignment
+     */
+    const assignmentId = ObjectId.createFromHexString(req.params.id);
+    const Assignments = await getAssignments();
+    count = await Assignments.countDocuments({ _id: assignmentId });
 
-  if (count <= 0) {
-    res.status(404).send({
-      error: "Assignment not found",
-    });
-  } else if (validateAgainstSchema(req.body, SubmissionSchema)) {
-    try {
-      const submission = await insertSubmission(req.body);
-      if (submission) {
-        res.status(201).send({ id: submission.id });
+    if (count <= 0) {
+      res.status(404).send({
+        error: "Assignment not found",
+      });
+    } else if (req.file && validateAgainstSchema(req.body, SubmissionSchema)) {
+      try {
+        const submissionId = await insertSubmission(req);
+        await _removeUploadedFile(req.file);
+        if (submissionId) {
+          res
+            .status(201)
+            .send({ id: submissionId, link: `/submissions/${submissionId}` });
+        }
+      } catch (err) {
+        res.status(500).send({ error: err.message });
       }
-    } catch (err) {
-      res.status(500).send({ error: err });
+    } else {
+      res
+        .status(400)
+        .send({ error: "Request body is missing required fields" });
     }
-  } else {
-    res.status(400).send({ error: "Request body is missing required fields" });
   }
-});
+);
 
 module.exports = router;
