@@ -82,3 +82,31 @@ async function _saveSubmissionfile(req) {
       });
   });
 }
+
+async function getSubmissionDownloadStream(id) {
+  try {
+    const submission = await getSubmissionById(id);
+    if (submission) {
+      const db = getDbReference();
+      const bucket = new GridFSBucket(db, { bucketName: "submissions" });
+      return bucket.openDownloadStreamByName(submission.filename);
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+exports.getSubmissionDownloadStream = getSubmissionDownloadStream;
+
+async function getSubmissionById(id) {
+  const db = getDbReference();
+  const bucket = new GridFSBucket(db, { bucketName: "submissions" });
+  if (!ObjectId.isValid(id)) {
+    return null;
+  } else {
+    const results = await bucket
+      .find({ _id: ObjectId.createFromHexString(id) })
+      .toArray();
+    return results[0];
+  }
+}
