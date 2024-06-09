@@ -6,7 +6,8 @@ const { getCourse } = require('../models/course');
 const { getAssignmentsForCourse } = require('../models/assignment');
 
 const auth = require('../lib/auth')
-const coursesModel = require('../models/course')
+const coursesModel = require('../models/course');
+const { getPaginationLinks } = require("../lib/pagination");
 
 const CoursesSchema = {
     subjectCode: {required: true},
@@ -17,13 +18,32 @@ const CoursesSchema = {
     students: {required: true}
 }
 
-router.get("/", async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
+router.get("/", async (req, res, next) => {
+  let page = parseInt(req.query.page) || 1;
   const subject = req.query.subject;
   const courseNumber = req.query.number;
   const term = req.query.term;
+  console.log("== subject", subject);
+  console.log("== courseNumber", courseNumber);
+  console.log("== term", term);
 
-  const numPerPage = 10;
+  const pageSize = 1;
+  const Courses = await coursesModel.getCourses();
+
+  // query builder
+  
+  let dbMatch = {}
+  if (subject) {
+    dbMatch.subject = subject
+  }
+  if (courseNumber) {
+    dbMatch.number = courseNumber
+  }
+  if (term) {
+    dbMatch.term = term
+  }
+
+  // end query builder
 
   // Query the DB for courses
   // https://www.mongodb.com/docs/atlas/atlas-search/paginate-results/#std-label-fts-paginate-results
@@ -36,49 +56,80 @@ router.get("/", async (req, res) => {
       "instructorId": 123
     */
 
-// Src for pagination: https://codebeyondlimits.com/articles/pagination-in-mongodb-the-only-right-way-to-implement-it-and-avoid-common-mistakes
-  const courses = await Courses.aggregate([
+// Src for pagination:
+// https://codebeyondlimits.com/articles/pagination-in-mongodb-the-only-right-way-to-implement-it-and-avoid-common-mistakes
+  const retrievedCourses = await Courses.aggregate([
     {
       $facet: {
         metadata: [{ $count: "totalCount" }],
-        data: [{ $skip: (page - 1) * pageSize }, { $limit: pageSize }],
+        data: [
+          { $match: dbMatch },
+          { $skip: (page - 1) * pageSize },
+          { $limit: pageSize },
+        ],
       },
     },
-  ]);
+  ]).toArray();
 
-  //   const { count, rows } = await Course.findAndCountAll({
-  //     limit: numPerPage,
-  //     offset: page,
-  //     include: [
-  //       { model: Review, required: false },
-  //       { model: Photo, required: false },
-  //     ],
-  //   });
+  const count = retrievedCourses[0].metadata[0].totalCount
+  if (count > 0 && retrievedCourses[0].data.length == 0) {
+    res.status(404).json({
+        error: "Page not found"
+      });
+  } else {
 
-  const lastPage = Math.ceil(count / numPerPage);
-  page = page > lastPage ? lastPage : page;
-  page = page < 1 ? 1 : page;
+      console.log("== count", count);
+      console.log("== retrievedCourses", retrievedCourses[0].data);
 
-  /*
-   * Generate HATEOAS links for surrounding pages.
-   */
-  const links = {};
-  if (page < lastPage) {
-    links.nextPage = `/businesses?page=${page + 1}`;
-    links.lastPage = `/businesses?page=${lastPage}`;
+      const {lastPage, links} = getPaginationLinks("courses", page, pageSize, count)
+    
+      //   const { count, rows } = await Course.findAndCountAll({
+      //     limit: numPerPage,
+      //     offset: page,
+      //     include: [
+      //       { model: Review, required: false },
+      //       { model: Photo, required: false },
+      //     ],
+      //   });
+    
+    //   const lastPage = Math.ceil(count / pageSize);
+    //   page = page > lastPage ? lastPage : page;
+    //   page = page < 1 ? 1 : page;
+    
+    //   /*
+    //    * Generate HATEOAS links for surrounding pages.
+    //    */
+    //   const links = {};
+    //   if (page < lastPage) {
+    //     links.nextPage = `/courses?page=${page + 1}`;
+    //     links.lastPage = `/courses?page=${lastPage}`;
+    //   }
+    //   if (page > 1) {
+    //     links.prevPage = `/courses?page=${page - 1}`;
+    //     links.firstPage = "/courses?page=1";
+    //   }
+    
+      /*
+      {
+      "courses": [
+        {
+          "subject": "CS",
+          "number": "493",
+          "title": "Cloud Application Development",
+          "term": "sp22",
+          "instructorId": 123
+        }
+      ]
+    }*/
+      res.status(200).json({
+        courses: retrievedCourses[0].data,
+        pageNumber: page,
+        totalPages: lastPage,
+        pageSize: pageSize,
+        totalCount: count,
+        links: links,
+      });
   }
-  if (page > 1) {
-    links.prevPage = `/businesses?page=${page - 1}`;
-    links.firstPage = "/businesses?page=1";
-  }
-  res.status(200).json({
-    courses: rows,
-    pageNumber: page,
-    totalPages: lastPage,
-    pageSize: numPerPage,
-    totalCount: count,
-    links: links,
-  });
 });
 
 router.post(
