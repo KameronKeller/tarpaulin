@@ -19,10 +19,12 @@
     "homepage": "https://github.com/KameronKeller/tarpaulin#readme",
     "dependencies": {
         "bcryptjs": "^2.4.3",
+        "crypto": "^1.0.1",
         "express": "^4.19.2",
         "jsonwebtoken": "^9.0.2",
         "mongodb": "^6.7.0",
-        "morgan": "^1.10.0"
+        "morgan": "^1.10.0",
+        "multer": "^1.4.5-lts.1"
     },
     "devDependencies": {
         "@eslint/js": "^9.4.0",
