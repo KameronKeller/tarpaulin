@@ -12,6 +12,8 @@ const CourseSchema = {
   instructorId: { required: true },
 };
 
+exports.CourseSchema = CourseSchema
+
 async function getCourse(courseId) {
   const courses = getCourses();
   const course = courses.findOne({
@@ -32,7 +34,7 @@ async function insertCourse(courseInfo) {
   const course = extractValidFields(courseInfo, CourseSchema);
   const collection = getCourses();
   const result = await collection.insertOne(course);
-  return result.insertedIds;
+  return result.insertedId;
 }
 
 exports.insertCourse = insertCourse;
