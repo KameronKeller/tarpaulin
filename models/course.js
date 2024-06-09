@@ -39,6 +39,19 @@ async function insertCourse(courseInfo) {
 
 exports.insertCourse = insertCourse;
 
+async function updateCourse(id, courseInfo) {
+  const courses = getCourses()
+  const result = await courses.updateOne(
+    { _id: ObjectId.createFromHexString(id) },
+    {
+      $set: courseInfo,
+    }
+  );
+  return result
+}
+
+exports.updateCourse = updateCourse
+ 
 async function bulkInsertNewCourses(courses) {
   const coursesToInsert = courses.map(function (course) {
     return extractValidFields(course, CourseSchema);
