@@ -16,8 +16,8 @@ exports.CourseSchema = CourseSchema
 
 async function getCourse(courseId) {
   const courses = getCourses();
-  const course = courses.findOne({
-    _id: new ObjectId.createFromHexString(courseId),
+  const course = await courses.findOne({
+    _id: ObjectId.createFromHexString(courseId),
   });
   if (!course) {
     return null;
