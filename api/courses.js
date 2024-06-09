@@ -18,11 +18,20 @@ const CoursesSchema = {
     students: {required: true}
 }
 
-router.get("/", async (req, res, next) => {
+function pageNotExists(count, retrievedCourses) {
+    count > 0 && retrievedCourses[0].data.length == 0
+}
+
+router.get("/", async (req, res) => {
   let page = parseInt(req.query.page) || 1;
   const subject = req.query.subject;
   const courseNumber = req.query.number;
   const term = req.query.term;
+  const queryParams = {
+    subject: req.query.subject,
+    number: req.query.number,
+    term: req.query.term
+  };
   console.log("== subject", subject);
   console.log("== courseNumber", courseNumber);
   console.log("== term", term);
@@ -43,84 +52,39 @@ router.get("/", async (req, res, next) => {
     dbMatch.term = term
   }
 
-  // end query builder
-
-  // Query the DB for courses
-  // https://www.mongodb.com/docs/atlas/atlas-search/paginate-results/#std-label-fts-paginate-results
-  // Should only return:
-  /*
-      "subject": "CS",
-      "number": "493",
-      "title": "Cloud Application Development",
-      "term": "sp22",
-      "instructorId": 123
-    */
 
 // Src for pagination:
 // https://codebeyondlimits.com/articles/pagination-in-mongodb-the-only-right-way-to-implement-it-and-avoid-common-mistakes
   const retrievedCourses = await Courses.aggregate([
-    {
-      $facet: {
-        metadata: [{ $count: "totalCount" }],
-        data: [
           { $match: dbMatch },
-          { $skip: (page - 1) * pageSize },
-          { $limit: pageSize },
-        ],
-      },
-    },
+          {
+            $facet: {
+                data: [
+                    { $skip: (page - 1) * pageSize },
+                    { $limit: pageSize },
+                ],
+                totalCount: [
+                    { $count: "totalCount"}
+                ]
+            }
+          }
   ]).toArray();
 
-  const count = retrievedCourses[0].metadata[0].totalCount
-  if (count > 0 && retrievedCourses[0].data.length == 0) {
+  let count = 0;
+  // If nothing is returned, this will return undefined
+  // and the count will remain at zero
+  if (retrievedCourses[0].totalCount[0]) {
+    count = retrievedCourses[0].totalCount[0].totalCount
+  }
+
+  if (pageNotExists(count, retrievedCourses)) {
     res.status(404).json({
         error: "Page not found"
       });
   } else {
 
-      console.log("== count", count);
-      console.log("== retrievedCourses", retrievedCourses[0].data);
-
-      const {lastPage, links} = getPaginationLinks("courses", page, pageSize, count)
+      const {lastPage, links} = getPaginationLinks("courses", page, pageSize, count, queryParams)
     
-      //   const { count, rows } = await Course.findAndCountAll({
-      //     limit: numPerPage,
-      //     offset: page,
-      //     include: [
-      //       { model: Review, required: false },
-      //       { model: Photo, required: false },
-      //     ],
-      //   });
-    
-    //   const lastPage = Math.ceil(count / pageSize);
-    //   page = page > lastPage ? lastPage : page;
-    //   page = page < 1 ? 1 : page;
-    
-    //   /*
-    //    * Generate HATEOAS links for surrounding pages.
-    //    */
-    //   const links = {};
-    //   if (page < lastPage) {
-    //     links.nextPage = `/courses?page=${page + 1}`;
-    //     links.lastPage = `/courses?page=${lastPage}`;
-    //   }
-    //   if (page > 1) {
-    //     links.prevPage = `/courses?page=${page - 1}`;
-    //     links.firstPage = "/courses?page=1";
-    //   }
-    
-      /*
-      {
-      "courses": [
-        {
-          "subject": "CS",
-          "number": "493",
-          "title": "Cloud Application Development",
-          "term": "sp22",
-          "instructorId": 123
-        }
-      ]
-    }*/
       res.status(200).json({
         courses: retrievedCourses[0].data,
         pageNumber: page,
