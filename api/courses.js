@@ -133,8 +133,7 @@ router.post(
  */
 router.get("/:id", async (req, res, next) => {
   try {
-    // const business = await getBusinessById(req.params.id);
-    const course = await getCourseById(req.params.id);
+    const course = await getCourse(req.params.id);
     if (course) {
       res.status(200).send(course);
     } else {
@@ -143,7 +142,7 @@ router.get("/:id", async (req, res, next) => {
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Unable to fetch business.  Please try again later.",
+      error: "Unable to fetch course. Please try again later.",
     });
   }
 });
@@ -153,6 +152,19 @@ router.patch(
   authenticate,
   authorize([ROLES.admin, ROLES.instructor]),
   async function (req, res, next) {
+
+    if (req.role === ROLES.instructor) {
+        const isAuthorized = await authorizeCourseInstructor(
+          req.userId,
+          assignment.courseId.toString()
+        );
+        if (!isAuthorized) {
+          return res.status(403).send({
+            error: "Unauthorized User",
+          });
+        }
+      }
+
     if (await isAuthorized(req)) {
       const courseId = req.params.courseId;
       const result = await Course.update(req.body, {
