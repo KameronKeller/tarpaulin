@@ -40,6 +40,7 @@ async function insertSubmission(req) {
 exports.insertSubmission = insertSubmission;
 
 async function bulkInsertNewSubmissions(submissions) {
+  let ids = [];
   const db = getDbReference();
   const bucket = new GridFSBucket(db, { bucketName: "submissions" });
   const submissionsToinsert = submissions.map(function (submission) {
@@ -66,14 +67,15 @@ async function bulkInsertNewSubmissions(submissions) {
           reject(err);
         })
         .on("finish", () => {
-          console.log(uploadStream.id);
+          ids.push(uploadStream.id);
+          // console.log(uploadStream.id);
           resolve(uploadStream.id);
         });
     });
   });
   await Promise.all(submissionsToinsert);
 
-  return [0,1,2,3,4,5,6,7,8,9];
+  return ids;
 }
 
 exports.bulkInsertNewSubmissions = bulkInsertNewSubmissions;
