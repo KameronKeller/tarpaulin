@@ -7,12 +7,7 @@ const e = require('express');
 
 const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
 
-const UserSchema = {
-    name: { required: true},
-    email: {required: true},
-    password: {required: true},
-    role: {required: true}
-}
+const UserScheme = require('../models/user').UserSchema;
 
 
 /*  POST /users
