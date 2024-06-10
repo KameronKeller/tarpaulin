@@ -1,8 +1,6 @@
-const { createReadStream, createWriteStream } = require('fs');
 const { Router } = require("express");
-const { authenticate, authorize, ROLES, isAuthorized } = require("../lib/auth");
+const { authenticate, authorize, ROLES } = require("../lib/auth");
 const router = Router();
-const { getDbReference } = require("../lib/mongo");
 const { getCourse, insertCourse, updateCourse } = require("../models/course");
 const {
   getAssignmentsForCourse,
