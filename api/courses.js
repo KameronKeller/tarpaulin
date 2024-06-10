@@ -10,10 +10,11 @@ const auth = require("../lib/auth");
 const { CourseSchema } = require("../models/course");
 const { getPaginationLinks } = require("../lib/pagination");
 const { validateAgainstSchema } = require("../lib/validation");
-const { getUserById } = require("../models/user");
+const { getUserById, getUsers} = require("../models/user");
 const coursesModel = require("../models/course");
 const { Transform } = require('@json2csv/node/index.js');
 const { Readable } = require('stream');
+const { ObjectId } = require('mongodb');
 
 
 function pageNotExists(count, retrievedCourses) {
