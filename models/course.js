@@ -5,6 +5,7 @@ const auth = require("../lib/auth");
 
 // subject, number, title, term, instructorId
 const CourseSchema = {
+  _id: { required: false },
   subject: { required: true },
   number: { required: true },
   title: { required: true },

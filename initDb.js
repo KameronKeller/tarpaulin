@@ -22,10 +22,10 @@ const { bulkInsertNewCourses } = require('./models/course')
 const { bulkInsertNewAssignments } = require('./models/assignment')
 const { bulkInsertNewSubmissions } = require('./models/submission')
 
-const assignmnetData = require('./data/assignments.json')
-const coursesData = require('./data/courses.json')
-const submissionsData = require('./data/submissions.json')
-const userData = require('./data/users.json')
+const assignmnetData = require('./data/assignments').assignmentData;
+const coursesData = require('./data/courses').courseData;
+const submissionsData = require('./data/submissions').submissionData;
+const userData = require('./data/users').userData;
 
 
 const mongoCreateUser = process.env.MONGO_CREATE_USER
@@ -36,18 +36,35 @@ connectToDb(async function () {
   /*
    * Insert initial business data into the database
    */
-  console.log("== Inserting data into database")
-  const userIds = await bulkInsertNewUsers(userData)
-  console.log("== Inserted users with IDs:", userIds)
+  console.log("== Inserting data into database");
+  const userIds = await bulkInsertNewUsers(userData);
+  console.log("== Inserted users with IDs:", userIds);
 
-  const courseIds = await bulkInsertNewCourses(coursesData)
-  console.log("== Inserted courses with IDs:", courseIds)
+  const courseIds = await bulkInsertNewCourses(coursesData);
+  console.log("== Inserted courses with IDs:", courseIds);
 
-  const assignmentIds = await bulkInsertNewAssignments(assignmnetData)
-  console.log("== Inserted assignments with IDs:", assignmentIds)
+  const assignmentIds = await bulkInsertNewAssignments(assignmnetData);
+  console.log("== Inserted assignments with IDs:", assignmentIds);
 
-  const submissionIds = await bulkInsertNewSubmissions(submissionsData)
-  console.log("== Inserted submissions with IDs:", submissionIds)
+  const submissionIds = await bulkInsertNewSubmissions(submissionsData);
+  console.log("== Inserted submissions with IDs:", submissionIds);
+
+  console.log("== Selecting classes for students");
+  const db = getDbReference();
+
+  for (id in userIds) {
+    const user = await db.collection('Users').findOne({_id: userIds[id]});
+    if (user.role === "student") {
+      let courses = []
+      for (let i = 0; i < 4; i++) { 
+        courses.push(courseIds[i])
+      }
+      user.courseIds = courses;
+      await db.collection('Users').updateOne({_id: userIds[id]}, {$set: user});
+    } 
+
+    
+  }
 
 
   /*

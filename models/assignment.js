@@ -5,6 +5,7 @@ const { ROLES } = require("../lib/auth");
 const { getCourse } = require("./course");
 
 const AssignmentSchema = {
+  _id: { required: false },
   courseId: { required: true },
   title: { required: true },
   points: { required: true },
@@ -33,6 +34,7 @@ exports.getAssignment = getAssignment;
 
 async function insertAssignment(req) {
   const assignmentInfo = req.body;
+  assignmentInfo.courseId = ObjectId.createFromHexString(req.body.courseId);
   const assignment = extractValidFields(assignmentInfo, AssignmentSchema);
   if (req.role === ROLES.instructor) {
     const isAuthorized = await authorizeCourseInstructor(
