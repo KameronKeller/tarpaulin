@@ -77,8 +77,8 @@ exports.bulkInsertNewSubmissions = bulkInsertNewSubmissions;
 
 function getSubmissions() {
   const db = getDbReference();
-  const collection = db.collection("Submissions");
-  return collection;
+  const bucket = new GridFSBucket(db, {bucketName: "submissions"})
+  return bucket;
 }
 
 exports.getSubmissions = getSubmissions;

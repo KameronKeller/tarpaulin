@@ -152,7 +152,7 @@ router.get(
   authenticate,
   authorize([ROLES.admin, ROLES.instructor]),
   async (req, res) => {
-    const Submissions = await getSubmissions();
+    const Submissions = getSubmissions();
     const Assignments = await getAssignments();
     const pageSize = 10;
 
@@ -179,9 +179,12 @@ router.get(
         });
       }
     }
-    const totalSubmissions = await Submissions.countDocuments({
-      assignmentId: id,
-    });
+    let totalSubmissions;
+
+    const results = await Submissions.find({
+      "metadata.assignmentId": id,
+    }).toArray();
+    totalSubmissions = results.length;
 
     if (totalSubmissions <= 0) {
       res.status(404).send({
@@ -194,24 +197,31 @@ router.get(
       submissionPage = submissionPage > lastPage ? 1 : submissionPage;
       submissionPage = submissionPage < 1 ? 1 : submissionPage;
 
-      const submissions = await Submissions.aggregate([
-        { $match: { assignmentId: id } },
-        { $skip: (submissionPage - 1) * pageSize },
-        { $limit: pageSize },
-        { $project: { _id: 1, studentId: 1, timestamp: 1, grade: 1, file: 1 } },
-      ]).toArray();
+      const submissions = await Submissions.find(
+        { "metadata.assignmentId": id },
+        {
+          $skip: (submissionPage - 1) * pageSize,
+          $limit: pageSize,
+          $project: {
+            _id: 1,
+            "metadata.studentId": 1,
+            "metadata.timestamp": 1,
+            "metadata.grade": 1,
+          },
+        }
+      ).toArray();
 
       // TODO: Might have to adjust this
       links = {};
       if (submissionPage < lastPage) {
-        links.nextPage = `/businesses?page=${submissionPage + 1}`;
-        links.lastPage = `/businesses?page=${lastPage}`;
+        links.nextPage = `assignments/${id}/submissions?page=${submissionPage + 1}`;
+        links.lastPage = `assignments/${id}/submissions?page=${lastPage}`;
       }
       if (submissionPage > 1) {
-        links.prevPage = `/businesses?page=${submissionPage - 1}`;
-        links.firstPage = "/businesses?page=1";
+        links.prevPage = `assignments/${id}/submissions?page=${submissionPage - 1}`;
+        links.firstPage = `assignments/${id}/submissions?page=1`;
       } else {
-        links.lastPage = "/businesses?page=1";
+        links.lastPage = `assignments/${id}/submissions?page=1`;
       }
       res.status(200).send({ submissions, links: links });
     }
