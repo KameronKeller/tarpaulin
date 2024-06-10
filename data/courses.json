@@ -33,5 +33,75 @@
     "title": "Internship",
     "term": "sp22",
     "instructorId": "128"
+  },
+  {
+    "subject": "HST",
+    "number": "101",
+    "title": "World History I",
+    "term": "sp22",
+    "instructorId": "201"
+  },
+  {
+    "subject": "HST",
+    "number": "102",
+    "title": "World History II",
+    "term": "sp22",
+    "instructorId": "202"
+  },
+  {
+    "subject": "MTH",
+    "number": "201",
+    "title": "Calculus I",
+    "term": "sp22",
+    "instructorId": "301"
+  },
+  {
+    "subject": "MTH",
+    "number": "202",
+    "title": "Calculus II",
+    "term": "sp22",
+    "instructorId": "302"
+  },
+  {
+    "subject": "MTH",
+    "number": "203",
+    "title": "Linear Algebra",
+    "term": "sp23",
+    "instructorId": "303"
+  },
+  {
+    "subject": "SOC",
+    "number": "101",
+    "title": "Introduction to Sociology",
+    "term": "sp24",
+    "instructorId": "401"
+  },
+  {
+    "subject": "SOC",
+    "number": "201",
+    "title": "Social Psychology",
+    "term": "sp22",
+    "instructorId": "402"
+  },
+  {
+    "subject": "SOC",
+    "number": "301",
+    "title": "Sociology of Family",
+    "term": "sp22",
+    "instructorId": "403"
+  },
+  {
+    "subject": "HST",
+    "number": "201",
+    "title": "American History I",
+    "term": "sp22",
+    "instructorId": "204"
+  },
+  {
+    "subject": "HST",
+    "number": "202",
+    "title": "American History II",
+    "term": "sp22",
+    "instructorId": "205"
   }
 ]

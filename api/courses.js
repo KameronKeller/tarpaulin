@@ -1,10 +1,17 @@
 const { Router } = require("express");
+const { authenticate, authorize, ROLES, isAuthorized } = require("../lib/auth");
 const router = Router();
 const { getDbReference } = require("../lib/mongo");
-const { getCourse } = require("../models/course");
-const { getAssignmentsForCourse } = require("../models/assignment");
-
+const { getCourse, insertCourse, updateCourse } = require("../models/course");
+const {
+  getAssignmentsForCourse,
+  authorizeCourseInstructor,
+} = require("../models/assignment");
 const auth = require("../lib/auth");
+const { CourseSchema } = require("../models/course");
+const { getPaginationLinks } = require("../lib/pagination");
+const { validateAgainstSchema } = require("../lib/validation");
+const { getUserById } = require("../models/user");
 const coursesModel = require("../models/course");
 
 const CoursesSchema = {
@@ -15,6 +22,170 @@ const CoursesSchema = {
   instructorId: { required: true },
   students: { required: true },
 };
+
+function pageNotExists(count, retrievedCourses) {
+  count > 0 && retrievedCourses[0].data.length == 0;
+}
+
+router.get("/", async (req, res) => {
+  let page = parseInt(req.query.page) || 1;
+  const subject = req.query.subject;
+  const courseNumber = req.query.number;
+  const term = req.query.term;
+  const queryParams = {
+    subject: req.query.subject,
+    number: req.query.number,
+    term: req.query.term,
+  };
+
+  const pageSize = 1;
+  const Courses = await coursesModel.getCourses();
+
+  // query builder
+
+  let dbMatch = {};
+  if (subject) {
+    dbMatch.subject = subject;
+  }
+  if (courseNumber) {
+    dbMatch.number = courseNumber;
+  }
+  if (term) {
+    dbMatch.term = term;
+  }
+
+  // Src for pagination:
+  // https://codebeyondlimits.com/articles/pagination-in-mongodb-the-only-right-way-to-implement-it-and-avoid-common-mistakes
+  const retrievedCourses = await Courses.aggregate([
+    { $match: dbMatch },
+    {
+      $facet: {
+        data: [{ $skip: (page - 1) * pageSize }, { $limit: pageSize }],
+        totalCount: [{ $count: "totalCount" }],
+      },
+    },
+  ]).toArray();
+
+  let count = 0;
+  // If nothing is returned, this will return undefined
+  // and the count will remain at zero
+  if (retrievedCourses[0].totalCount[0]) {
+    count = retrievedCourses[0].totalCount[0].totalCount;
+  }
+
+  if (pageNotExists(count, retrievedCourses)) {
+    res.status(404).json({
+      error: "Page not found",
+    });
+  } else {
+    const { lastPage, links } = getPaginationLinks(
+      "courses",
+      page,
+      pageSize,
+      count,
+      queryParams
+    );
+
+    res.status(200).json({
+      courses: retrievedCourses[0].data,
+      pageNumber: page,
+      totalPages: lastPage,
+      pageSize: pageSize,
+      totalCount: count,
+      links: links,
+    });
+  }
+});
+
+router.post("/", authenticate, authorize([ROLES.admin]), async (req, res) => {
+  // TODO: update validation
+  if (validateAgainstSchema(req.body, CourseSchema)) {
+    try {
+      const user = await getUserById(req.body.instructorId);
+      if (user.role !== ROLES.instructor) {
+        return res.status(400).send({
+          error: "Given instructorId is not an instructor",
+        });
+      }
+    } catch (err) {
+      return res.status(400).send({
+        error: "Given instructorId is not an instructor",
+      });
+    }
+
+    try {
+      const id = await insertCourse(req.body);
+      res.status(201).send({
+        id: id,
+      });
+    } catch (err) {
+      res.status(500).send({
+        error: "Error inserting course into DB.  Please try again later.",
+      });
+    }
+  } else {
+    res.status(400).send({
+      error: "Request body is not a valid course object.",
+    });
+  }
+});
+
+router.get("/:id", async (req, res, next) => {
+  try {
+    const course = await getCourse(req.params.id);
+    if (course) {
+      res.status(200).send(course);
+    } else {
+      next();
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      error: "Unable to fetch course. Please try again later.",
+    });
+  }
+});
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorize([ROLES.admin, ROLES.instructor]),
+  async function (req, res) {
+    try {
+      // check if valid data
+      if (validateAgainstSchema(req.body, CourseSchema)) {
+        // get the course
+        const course = await getCourse(req.params.id);
+
+        // check if authorized
+        if (req.role === ROLES.instructor) {
+          const isAuthorized = await authorizeCourseInstructor(
+            req.userId,
+            course._id.toString()
+          );
+          if (!isAuthorized) {
+            return res.status(403).send({
+              error: "Unauthorized User",
+            });
+          }
+        }
+        // perform the update
+        const result = updateCourse(req.params.id, req.body);
+
+        // return 200 OK
+        res.status(200).send();
+      } else {
+        res.status(400).send({
+          error: "Request body is not a valid course object.",
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        error: "Cannot process request",
+      });
+    }
+  }
+);
 
 /* GET /courses/{id}/students
  *   Returns a list containing the User IDs of all students currently enrolled in the Course.
