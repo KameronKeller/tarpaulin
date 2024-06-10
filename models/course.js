@@ -115,7 +115,7 @@ async function update_students(req, courseId) {
 
   const toAdd = req.body.add;
 
-  if (toAdd & (toAdd.length > 0)) {
+  if (toAdd && (toAdd.length > 0)) {
     await collection.updateOne(
       { _id: new ObjectId(String(courseId)) },
       { $addToSet: { students: { $each: toAdd } } }
