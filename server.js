@@ -1,8 +1,8 @@
 const express = require('express')
 const morgan = require('morgan')
-const redisClient = require('./lib/redis')
 const api = require('./api')
 const app = express()
+const {rateLimiting } = require('./lib/tokenBucket')
 
 const { connectToDb } = require('./lib/mongo')  
 
@@ -10,6 +10,8 @@ const port = process.env.PORT || 3000
 
 app.use(morgan('dev'))
 app.use(express.json())
+
+app.use(rateLimiting);
 app.use('/', api)
 
 app.use('*', function (req, res, next) {

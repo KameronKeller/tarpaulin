@@ -57,7 +57,7 @@ connectToDb(async function () {
     if (user.role === "student") {
       let courses = []
       for (let i = 0; i < 4; i++) { 
-        courses.push(courseIds[i])
+        courses.push({"id": courseIds[i]})
       }
       user.courseIds = courses;
       await db.collection('Users').updateOne({_id: userIds[id]}, {$set: user});
