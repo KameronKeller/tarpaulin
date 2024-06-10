@@ -53,12 +53,8 @@ async function bulkInsertNewSubmissions(submissions) {
         timestamp: fields.timestamp,
         grade: fields.grade,
       };
-      console.log(`Metadata ${metadata}`);
-
       const fileName = crypto.pseudoRandomBytes(16).toString("hex");
-
       const uploadStream = bucket.openUploadStreamWithId(fields._id, fileName, { metadata: metadata });
-      console.log(`FileName: ${fileName}`);
       fs.createReadStream(path.join(__dirname, '../test.txt'))
         .on("error", (err) => { console.log("new error block"); console.log(err.message); })
         .pipe(uploadStream) 
