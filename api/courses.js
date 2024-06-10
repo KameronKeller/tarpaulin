@@ -266,7 +266,7 @@ router.delete(
 router.post(
   "/:courseId/students",
   auth.authenticate,
-  auth.authorize(["admin", "instructor"]),
+  auth.authorize([ROLES.admin, ROLES.instructor]),
   async (req, res, next) => {
     try {
       if (req.body.add || req.body.remove) {
@@ -274,7 +274,7 @@ router.post(
         if (course) {
           if (
             (req.role == "instructor" && course.instructorId == req.userId) ||
-            req.role == "admin"
+            req.role == ROLES.admin
           ) {
             // An admin and an instructor with the same id as in the course can view the students
             // Update the course's students with the id's found in the add or remove array.
@@ -325,9 +325,13 @@ router.get(
     try {
       const course = await coursesModel.getCourseById(req.params.id);
       if (course) {
+        const isAuthorized = await authorizeCourseInstructor(
+          req.userId,
+          course._id.toString()
+        );
         if (
-          (req.role == "instructor" && course.instructorId == req.userId) ||
-          req.role == "admin"
+          (isAuthorized) || 
+          req.role ==ROLES.admin
         ) {
           // An admin and an instructor with the same id as in the course can view the students
           const students = course.students;
