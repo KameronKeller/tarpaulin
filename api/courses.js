@@ -255,16 +255,19 @@ router.get(
           req.role ==ROLES.admin
         ) {
           // An admin and an instructor with the same id as in the course can view the students
-          const students = course.students;
+          // const students = course.students;
+          let users = getUsers();
+          let students = await users.find({ role: "student", courseIds: {$elemMatch: {id: ObjectId.createFromHexString(req.params.id)}} }).toArray();
+
           
           // for each student, get the student record from the DB and build the objects to convert to a csv
           let courseStudents = [];
-          for (let studentId of students) {
-            const retrievedStudent = await getUserById(studentId);
+          for (let student of students) {
+            // const retrievedStudent = await getUserById(studentId);
             courseStudents.push({
-              id: studentId,
-              name: retrievedStudent.name,
-              email: retrievedStudent.email,
+              id: student._id,
+              name: student.name,
+              email: student.email,
             });
           }
 

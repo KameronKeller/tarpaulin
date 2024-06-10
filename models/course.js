@@ -108,14 +108,14 @@ async function getCourseById(courseId) {
 exports.getCourseById = getCourseById;
 
 /*
- *   Adds and removes students from a course
+ *   Adds and removes courses from a student
  */
 async function update_students(req, courseId) {
   const db = getDbReference();
   const collection = db.collection("Users");
 
   const toAdd = req.body.add;
-  if (toAdd & (toAdd.length > 0)) {
+  if (toAdd && (toAdd.length > 0)) {
     for (addS of toAdd){
       const resultAdd = await collection.updateOne(
         { _id: ObjectId.createFromHexString(addS), "courseIds": { $not: { $elemMatch: { id: courseId } } } },
