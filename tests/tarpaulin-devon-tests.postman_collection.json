@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ce12c7d4-d055-44c4-9fac-b13afe01202c",
+		"_postman_id": "34be8f6d-5c6a-4682-84df-92385868f095",
 		"name": "tarpaulin-devon-tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "32530669"
@@ -3029,7 +3029,7 @@
 									"response": []
 								},
 								{
-									"name": "/courses/{id}/students-instructor-403-incorrect-instructor Copy",
+									"name": "/courses/{id}/students-instructor-403-incorrect-instructor",
 									"event": [
 										{
 											"listen": "test",
@@ -3067,13 +3067,13 @@
 											}
 										},
 										"url": {
-											"raw": "{{baseURL}}/courses/{{courseId2}}/students",
+											"raw": "{{baseURL}}/courses/{{courseIdCoursesDiffInstruc}}/students",
 											"host": [
 												"{{baseURL}}"
 											],
 											"path": [
 												"courses",
-												"{{courseId2}}",
+												"{{courseIdCoursesDiffInstruc}}",
 												"students"
 											]
 										}
@@ -3086,7 +3086,7 @@
 							"name": "get",
 							"item": [
 								{
-									"name": "/courses/{id}/students-instructor-200 Copy",
+									"name": "/courses/{id}/students-instructor-200",
 									"event": [
 										{
 											"listen": "test",

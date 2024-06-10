@@ -112,23 +112,24 @@ exports.getCourseById = getCourseById;
  */
 async function update_students(req, courseId) {
   const db = getDbReference();
-  const collection = db.collection("Courses");
+  const collection = db.collection("Users");
 
   const toAdd = req.body.add;
-
-  if (toAdd && (toAdd.length > 0)) {
-    await collection.updateOne(
-      { _id: new ObjectId(String(courseId)) },
-      { $addToSet: { students: { $each: toAdd } } }
-    );
+  if (toAdd & (toAdd.length > 0)) {
+    for (addS of toAdd){
+      const resultAdd = await collection.updateOne(
+        { _id: ObjectId.createFromHexString(addS), "courseIds": { $not: { $elemMatch: { id: courseId } } } },
+        { $addToSet: {courseIds: {id: courseId}} } ) 
+    }
   }
 
   const toRemove = req.body.remove;
   if (toRemove && toRemove.length > 0) {
-    await collection.updateOne(
-      { _id: new ObjectId(String(courseId)) },
-      { $pull: { students: { $in: toRemove } } }
-    );
+    for (removeS of toRemove){
+      const resultRemove = await collection.updateOne(
+        { _id: ObjectId.createFromHexString(removeS) },
+        { $pull: {courseIds: {id: courseId}} } )
+    }
   }
 }
 
