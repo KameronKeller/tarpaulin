@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
     term: req.query.term,
   };
 
-  const pageSize = 1;
+  const pageSize = 2;
   const Courses = await coursesModel.getCourses();
 
   // query builder
