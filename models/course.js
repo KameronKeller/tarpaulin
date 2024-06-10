@@ -13,10 +13,12 @@ const CourseSchema = {
   instructorId: { required: true },
 };
 
+exports.CourseSchema = CourseSchema
+
 async function getCourse(courseId) {
   const courses = getCourses();
-  const course = courses.findOne({
-    _id: new ObjectId.createFromHexString(courseId),
+  const course = await courses.findOne({
+    _id: ObjectId.createFromHexString(courseId),
   });
   if (!course) {
     return null;
@@ -33,11 +35,24 @@ async function insertCourse(courseInfo) {
   const course = extractValidFields(courseInfo, CourseSchema);
   const collection = getCourses();
   const result = await collection.insertOne(course);
-  return result.insertedIds;
+  return result.insertedId;
 }
 
 exports.insertCourse = insertCourse;
 
+async function updateCourse(id, courseInfo) {
+  const courses = getCourses()
+  const result = await courses.updateOne(
+    { _id: ObjectId.createFromHexString(id) },
+    {
+      $set: courseInfo,
+    }
+  );
+  return result
+}
+
+exports.updateCourse = updateCourse
+ 
 async function bulkInsertNewCourses(courses) {
   const coursesToInsert = courses.map(function (course) {
     return extractValidFields(course, CourseSchema);
