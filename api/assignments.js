@@ -210,8 +210,9 @@ router.get(
           },
         }
       ).toArray();
-
-      // TODO: Might have to adjust this
+      submissions.map((submission) => {
+        submission.url = `/submissions/${submission._id}`
+      })
       links = {};
       if (submissionPage < lastPage) {
         links.nextPage = `assignments/${id}/submissions?page=${submissionPage + 1}`;
