@@ -206,12 +206,9 @@ router.get(
           req.role == "admin"
         ) {
           // An admin and an instructor with the same id as in the course can view the students
-          console.log(`== Before find`);
           try {
             let users = getUsers();
-            console.log(`== users ${users}`);
             let students = await users.find({ role: "student", courseIds: {$elemMatch: {id: ObjectId.createFromHexString(req.params.courseId)}} }).toArray();
-            console.log(`== students ${students}`);
             res.status(200).json({ students });
           }
           catch (error) {
