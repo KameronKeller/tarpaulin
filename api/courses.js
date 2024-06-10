@@ -1,3 +1,4 @@
+const { createReadStream, createWriteStream } = require('fs');
 const { Router } = require("express");
 const { authenticate, authorize, ROLES, isAuthorized } = require("../lib/auth");
 const router = Router();
@@ -13,6 +14,8 @@ const { getPaginationLinks } = require("../lib/pagination");
 const { validateAgainstSchema } = require("../lib/validation");
 const { getUserById } = require("../models/user");
 const coursesModel = require("../models/course");
+const { Transform } = require('@json2csv/node/index.js');
+const { Readable } = require('stream');
 
 const CoursesSchema = {
   subjectCode: { required: true },
@@ -152,12 +155,9 @@ router.patch(
   authorize([ROLES.admin, ROLES.instructor]),
   async function (req, res) {
     try {
-      // check if valid data
       if (validateAgainstSchema(req.body, CourseSchema)) {
-        // get the course
         const course = await getCourse(req.params.id);
 
-        // check if authorized
         if (req.role === ROLES.instructor) {
           const isAuthorized = await authorizeCourseInstructor(
             req.userId,
@@ -169,10 +169,8 @@ router.patch(
             });
           }
         }
-        // perform the update
         const result = updateCourse(req.params.id, req.body);
 
-        // return 200 OK
         res.status(200).send();
       } else {
         res.status(400).send({
@@ -320,5 +318,63 @@ router.get("/:id/assignment", async (req, res) => {
     });
   }
 });
+
+router.get(
+  "/:id/roster",
+  // auth.authenticate,
+  // auth.authorize([ROLES.admin, ROLES.instructor]),
+  async (req, res) => {
+    try {
+      const course = await coursesModel.getCourseById(req.params.id);
+      if (course) {
+        if (
+          (req.role == "instructor" && course.instructorId == req.userId) ||
+          req.role == "admin"
+        ) {
+          // An admin and an instructor with the same id as in the course can view the students
+          const students = course.students;
+          // for each student, get the student record from the DB
+          let courseStudents = []
+          for (let studentId of students) {
+            const retrievedStudent = await getUserById(studentId)
+            courseStudents.push(
+              {
+                id: studentId,
+                name: retrievedStudent.name,
+                email: retrievedStudent.email
+              }
+            )
+          }
+          
+          res.attachment("roster.csv")
+          const parser = new Transform({}, {}, {objectMode: true});
+          
+          // const input = createReadStream("test.csv");
+          const input = new Readable({
+            objectMode: true,
+            read() {}
+          })
+          courseStudents.forEach(student => input.push(student))
+          input.push(null);
+          input.pipe(parser).pipe(res)
+
+
+          
+        } else {
+          // Unauthorized
+          res.status(403).json({
+            error: "Unauthorized",
+          });
+        }
+      } else {
+        res.status(404).json({ error: "Invalid course id" });
+      }
+    } catch (error) {
+      res.status(500).json({
+        error: "Cannot process request",
+      });
+    }
+  }
+);
 
 module.exports = router;
