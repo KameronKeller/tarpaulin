@@ -4,7 +4,7 @@ const auth = require('../lib/auth');
 const { extractValidFields } = require('../lib/validation');
 var bcrypt = require("bcryptjs");
 
-const UserSchema = {
+const UserSchemaInit = {
     _id : {required: false},
     name: { required: true},
     email: {required: true},
@@ -12,6 +12,15 @@ const UserSchema = {
     role: {required: true},
     courseIds: {required: false}
 }
+
+const UserSchema = {
+    name: { required: true},
+    email: {required: true},
+    password: {required: true},
+    role: {required: true},
+    courseIds: {required: false}
+}
+exports.UserSchema = UserSchema
 
 async function get_user(userId){
     const db = getDbReference();
@@ -88,11 +97,17 @@ async function getUserById(id) {
     return result;
 }
 
-exports.getUserById = getUserById
+function getUsers() {
+    const db = getDbReference();
+    const collection = db.collection('Users');
+    return collection;
+}
+
+
 
 async function bulkInsertNewUsers(users) {
     const usersToInsert = users.map( function (user) {
-        let extractedUser = extractValidFields(user, UserSchema)
+        let extractedUser = extractValidFields(user, UserSchemaInit)
         extractedUser.password = bcrypt.hashSync(user.password, 8)
         return extractedUser
     });
@@ -101,6 +116,8 @@ async function bulkInsertNewUsers(users) {
     const results = await collection.insertMany(usersToInsert);
     return results.insertedIds;
 }
-
+exports.getUserById = getUserById
+exports.getUsers = getUsers
 exports.get_user_by_email = get_user_by_email
 exports.bulkInsertNewUsers = bulkInsertNewUsers
+exports.UserSchemaInit = UserSchemaInit
