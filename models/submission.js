@@ -68,7 +68,6 @@ async function bulkInsertNewSubmissions(submissions) {
         })
         .on("finish", () => {
           ids.push(uploadStream.id);
-          // console.log(uploadStream.id);
           resolve(uploadStream.id);
         });
     });
