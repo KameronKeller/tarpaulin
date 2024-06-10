@@ -11,8 +11,9 @@ const auth = require("../lib/auth");
 const { CourseSchema } = require("../models/course");
 const { getPaginationLinks } = require("../lib/pagination");
 const { validateAgainstSchema } = require("../lib/validation");
-const { getUserById } = require("../models/user");
+const { getUserById, getUsers } = require("../models/user");
 const coursesModel = require("../models/course");
+const { ObjectId } = require("mongodb");
 
 const CoursesSchema = {
   subjectCode: { required: true },
@@ -205,8 +206,19 @@ router.get(
           req.role == "admin"
         ) {
           // An admin and an instructor with the same id as in the course can view the students
-          const students = course.students;
-          res.status(200).json({ students });
+          console.log(`== Before find`);
+          try {
+            let users = getUsers();
+            console.log(`== users ${users}`);
+            let students = await users.find({ role: "student", courseIds: {$elemMatch: {id: ObjectId.createFromHexString(req.params.courseId)}} }).toArray();
+            console.log(`== students ${students}`);
+            res.status(200).json({ students });
+          }
+          catch (error) {
+            console.log(`== Error ${error}\n==msg ${error.message}`);
+          }
+
+
         } else {
           // Unauthorized
           res.status(403).json({
