@@ -321,8 +321,8 @@ router.get("/:id/assignment", async (req, res) => {
 
 router.get(
   "/:id/roster",
-  // auth.authenticate,
-  // auth.authorize([ROLES.admin, ROLES.instructor]),
+  auth.authenticate,
+  auth.authorize([ROLES.admin, ROLES.instructor]),
   async (req, res) => {
     try {
       const course = await coursesModel.getCourseById(req.params.id);
@@ -333,33 +333,37 @@ router.get(
         ) {
           // An admin and an instructor with the same id as in the course can view the students
           const students = course.students;
-          // for each student, get the student record from the DB
-          let courseStudents = []
+          
+          // for each student, get the student record from the DB and build the objects to convert to a csv
+          let courseStudents = [];
           for (let studentId of students) {
-            const retrievedStudent = await getUserById(studentId)
-            courseStudents.push(
-              {
-                id: studentId,
-                name: retrievedStudent.name,
-                email: retrievedStudent.email
-              }
-            )
+            const retrievedStudent = await getUserById(studentId);
+            courseStudents.push({
+              id: studentId,
+              name: retrievedStudent.name,
+              email: retrievedStudent.email,
+            });
           }
+
+          // Set the filename for the download
+          res.attachment("roster.csv");
+
+          // Set up the parser
+          const parser = new Transform({}, {}, { objectMode: true });
           
-          res.attachment("roster.csv")
-          const parser = new Transform({}, {}, {objectMode: true});
-          
-          // const input = createReadStream("test.csv");
+          // Set up a stream to pass to the parser
           const input = new Readable({
             objectMode: true,
-            read() {}
-          })
-          courseStudents.forEach(student => input.push(student))
-          input.push(null);
-          input.pipe(parser).pipe(res)
+          });
 
-
+          // For each student, run it through the parser
+          courseStudents.forEach((student) => input.push(student));
           
+          // Push null when there is no more data to add
+          input.push(null);
+
+          // Pipe the data to the response
+          input.pipe(parser).pipe(res);
         } else {
           // Unauthorized
           res.status(403).json({
