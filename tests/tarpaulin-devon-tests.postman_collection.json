@@ -1517,13 +1517,13 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseURL}}/users/{{instructorId2}}",
+											"raw": "{{baseURL}}/users/{{instructorId}}",
 											"host": [
 												"{{baseURL}}"
 											],
 											"path": [
 												"users",
-												"{{instructorId2}}"
+												"{{instructorId}}"
 											]
 										}
 									},
@@ -1559,13 +1559,13 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseURL}}/users/{{instructorId}}",
+											"raw": "{{baseURL}}/users/{{instructorId2}}",
 											"host": [
 												"{{baseURL}}"
 											],
 											"path": [
 												"users",
-												"{{instructorId}}"
+												"{{instructorId2}}"
 											]
 										}
 									},
@@ -1611,7 +1611,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"email\": \"johnsmith@example.com\",\r\n    \"password\": \"hunter2\"\r\n}",
+											"raw": "{\r\n    \"email\": \"ivyanderson@example.com\",\r\n    \"password\": \"hunter2\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2318,13 +2318,13 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseURL}}/users/{{studentId2}}",
+											"raw": "{{baseURL}}/users/{{studentId}}",
 											"host": [
 												"{{baseURL}}"
 											],
 											"path": [
 												"users",
-												"{{studentId2}}"
+												"{{studentId}}"
 											]
 										}
 									},
@@ -2360,13 +2360,13 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseURL}}/users/{{studentId}}",
+											"raw": "{{baseURL}}/users/{{studentId2}}",
 											"host": [
 												"{{baseURL}}"
 											],
 											"path": [
 												"users",
-												"{{studentId}}"
+												"{{studentId2}}"
 											]
 										}
 									},
