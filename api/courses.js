@@ -10,20 +10,11 @@ const auth = require("../lib/auth");
 const { CourseSchema } = require("../models/course");
 const { getPaginationLinks } = require("../lib/pagination");
 const { validateAgainstSchema } = require("../lib/validation");
-const { getUserById, getUsers } = require("../models/user");
+const { getUserById } = require("../models/user");
 const coursesModel = require("../models/course");
 const { Transform } = require('@json2csv/node/index.js');
 const { Readable } = require('stream');
-const { ObjectId } = require("mongodb");
 
-const CoursesSchema = {
-  subjectCode: { required: true },
-  number: { required: true },
-  title: { required: true },
-  term: { required: true },
-  instructorId: { required: true },
-  students: { required: true },
-};
 
 function pageNotExists(count, retrievedCourses) {
   count > 0 && retrievedCourses[0].data.length == 0;
@@ -148,89 +139,6 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.patch(
-  "/:id",
-  authenticate,
-  authorize([ROLES.admin, ROLES.instructor]),
-  async function (req, res) {
-    try {
-      if (validateAgainstSchema(req.body, CourseSchema)) {
-        const course = await getCourse(req.params.id);
-
-        if (req.role === ROLES.instructor) {
-          const isAuthorized = await authorizeCourseInstructor(
-            req.userId,
-            course._id.toString()
-          );
-          if (!isAuthorized) {
-            return res.status(403).send({
-              error: "Unauthorized User",
-            });
-          }
-        }
-        const result = updateCourse(req.params.id, req.body);
-
-        res.status(200).send();
-      } else {
-        res.status(400).send({
-          error: "Request body is not a valid course object.",
-        });
-      }
-    } catch (error) {
-      res.status(500).json({
-        error: "Cannot process request",
-      });
-    }
-  }
-);
-
-/* GET /courses/{id}/students
- *   Returns a list containing the User IDs of all students currently enrolled in the Course.
- *   Only an authenticated User with 'admin' role or an authenticated 'instructor' User
- *   whose ID matches the instructorId of the Course can fetch the list of enrolled students.
- */
-router.get(
-  "/:courseId/students",
-  auth.authenticate,
-  auth.authorize(["admin", "instructor"]),
-  async (req, res, next) => {
-    try {
-      const course = await coursesModel.getCourseById(req.params.courseId);
-      if (course) {
-        if (
-          (req.role == "instructor" && course.instructorId == req.userId) ||
-          req.role == "admin"
-        ) {
-          // An admin and an instructor with the same id as in the course can view the students
-          console.log(`== Before find`);
-          try {
-            let users = getUsers();
-            console.log(`== users ${users}`);
-            let students = await users.find({ role: "student", courseIds: {$elemMatch: {id: ObjectId.createFromHexString(req.params.courseId)}} }).toArray();
-            console.log(`== students ${students}`);
-            res.status(200).json({ students });
-          }
-          catch (error) {
-            console.log(`== Error ${error}\n==msg ${error.message}`);
-          }
-
-
-        } else {
-          // Unauthorized
-          res.status(403).json({
-            error: "Unauthorized",
-          });
-        }
-      } else {
-        res.status(404).json({ error: "Invalid course id" });
-      }
-    } catch (error) {
-      res.status(500).json({
-        error: "Cannot process request",
-      });
-    }
-  }
-);
 
 /*
  *  Completely removes the data for the specified Course, including all enrolled students,
@@ -317,7 +225,7 @@ router.post(
   }
 );
 
-router.get("/:id/assignment", async (req, res) => {
+router.get("/:id/assignments", async (req, res) => {
   try {
     console.log("Getting assignments for course: " + req.params.id);
     results = await getAssignmentsForCourse(req.params.id);
@@ -378,6 +286,102 @@ router.get(
 
           // Pipe the data to the response
           input.pipe(parser).pipe(res);
+        } else {
+          // Unauthorized
+          res.status(403).json({
+            error: "Unauthorized",
+          });
+        }
+      } else {
+        res.status(404).json({ error: "Invalid course id" });
+      }
+    } catch (error) {
+      res.status(500).json({
+        error: "Cannot process request",
+      });
+    }
+  }
+);
+
+module.exports = router;
+
+
+function pageNotExists(count, retrievedCourses) {
+  count > 0 && retrievedCourses[0].data.length == 0;
+}
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorize([ROLES.admin, ROLES.instructor]),
+  async function (req, res) {
+    try {
+      // check if valid data
+      if (validateAgainstSchema(req.body, CourseSchema)) {
+        // get the course
+        const course = await getCourse(req.params.id);
+
+        // check if authorized
+        if (req.role === ROLES.instructor) {
+          const isAuthorized = await authorizeCourseInstructor(
+            req.userId,
+            course._id.toString()
+          );
+          if (!isAuthorized) {
+            return res.status(403).send({
+              error: "Unauthorized User",
+            });
+          }
+        }
+        // perform the update
+        const result = updateCourse(req.params.id, req.body);
+
+        // return 200 OK
+        res.status(200).send();
+      } else {
+        res.status(400).send({
+          error: "Request body is not a valid course object.",
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        error: "Cannot process request",
+      });
+    }
+  }
+);
+
+/* GET /courses/{id}/students
+ *   Returns a list containing the User IDs of all students currently enrolled in the Course.
+ *   Only an authenticated User with 'admin' role or an authenticated 'instructor' User
+ *   whose ID matches the instructorId of the Course can fetch the list of enrolled students.
+ */
+router.get(
+  "/:courseId/students",
+  auth.authenticate,
+  auth.authorize(["admin", "instructor"]),
+  async (req, res, next) => {
+    try {
+      const course = await coursesModel.getCourseById(req.params.courseId);
+      if (course) {
+        if (
+          (req.role == "instructor" && course.instructorId == req.userId) ||
+          req.role == "admin"
+        ) {
+          // An admin and an instructor with the same id as in the course can view the students
+          console.log(`== Before find`);
+          try {
+            let users = getUsers();
+            console.log(`== users ${users}`);
+            let students = await users.find({ role: "student", courseIds: {$elemMatch: {id: ObjectId.createFromHexString(req.params.courseId)}} }).toArray();
+            console.log(`== students ${students}`);
+            res.status(200).json({ students });
+          }
+          catch (error) {
+            console.log(`== Error ${error}\n==msg ${error.message}`);
+          }
+
+
         } else {
           // Unauthorized
           res.status(403).json({
